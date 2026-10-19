@@ -1,8 +1,5 @@
 {
-  "crons": [
-    {
-      "path": "/api/cron/verdict",
-      "schedule": "0 16 * * *"
-    }
+  "redirects": [
+    { "source": "/(.*)", "destination": "https://posalana.lutvia.com/$1", "permanent": true }
   ]
 }

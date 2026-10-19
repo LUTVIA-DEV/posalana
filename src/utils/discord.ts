@@ -1,6 +1,8 @@
 import { colorLutviaEntero } from "./tokens.js";
 
-const BOT_AVATAR_URL = "https://posalana.vercel.app/bot-avatar.png";
+// Dirección pública del sitio, para los enlaces y el avatar del bot en Discord
+const SITE_URL = (process.env.SITE_URL || "https://posalana.vercel.app").replace(/\/$/, "");
+const BOT_AVATAR_URL = `${SITE_URL}/bot-avatar.png`;
 
 export async function sendDiscordRoll(
     displayName: string,
@@ -53,7 +55,7 @@ export async function sendDiscordRoll(
         // Standard notification
         embeds = [{
             title: "🎲 ¡El destino en juego! Nueva tirada",
-            description: `**${displayName}** arrojó los dados de la suerte y obtuvo:\n👉 **${diceStr}**\n\n${commentary}\n\n🔗 ¿Y vos? ¿Zafás o lavás? Medí tu suerte en la [App de POSALANA](https://posalana.vercel.app/)`,
+            description: `**${displayName}** arrojó los dados de la suerte y obtuvo:\n👉 **${diceStr}**\n\n${commentary}\n\n🔗 ¿Y vos? ¿Zafás o lavás? Medí tu suerte en la [App de POSALANA](${SITE_URL}/)`,
             color: colorLutviaEntero("cyan"),
             footer: {
                 text: "POSALANA • Suerte del Día 🎲"
@@ -104,7 +106,7 @@ export async function sendDiscordVerdict(
 
     const embed = {
         title: `📜 EL DECRETO DIARIO - ${dateStr}${automatic ? " · ⏰ MESA CERRADA" : ""}`,
-        description: `🚨 **¡ATENCIÓN JUGADORES!** El destino ha hablado y las sentencias de hoy son definitivas e inapelables.\n\n## 🎲 ${playersCount} ${playersCount === 1 ? "jugador tiró" : "jugadores tiraron"} hoy\n\nAquí tienen la distribución oficial de tareas de la mesa para hoy:\n\n🍽️ **PO:** **${poneStr}**\n🗑️ **SA:** **${sacaStr}**\n🧽 **LA:** **${lavaStr}**\n🎉 **NA:** **${zafaronStr !== "Ninguno" ? zafaronStr : "Ninguno"}**\n🛡️ **EXENTOS HOY:** **${exentosStr !== "Ninguno" ? exentosStr : "Ninguno"}**\n\n👉 *¿Querés apelar con tus estadísticas?* Entrá a la [App de POSALANA](https://posalana.vercel.app/)`,
+        description: `🚨 **¡ATENCIÓN JUGADORES!** El destino ha hablado y las sentencias de hoy son definitivas e inapelables.\n\n## 🎲 ${playersCount} ${playersCount === 1 ? "jugador tiró" : "jugadores tiraron"} hoy\n\nAquí tienen la distribución oficial de tareas de la mesa para hoy:\n\n🍽️ **PO:** **${poneStr}**\n🗑️ **SA:** **${sacaStr}**\n🧽 **LA:** **${lavaStr}**\n🎉 **NA:** **${zafaronStr !== "Ninguno" ? zafaronStr : "Ninguno"}**\n🛡️ **EXENTOS HOY:** **${exentosStr !== "Ninguno" ? exentosStr : "Ninguno"}**\n\n👉 *¿Querés apelar con tus estadísticas?* Entrá a la [App de POSALANA](${SITE_URL}/)`,
         color: colorLutviaEntero("rosa"),
         footer: {
             text: automatic

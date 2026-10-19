@@ -12,6 +12,7 @@
     "astro": "astro"
   },
   "dependencies": {
+    "@astrojs/node": "^10.1.4",
     "@astrojs/vercel": "^10.0.8",
     "@libsql/client": "^0.17.3",
     "@lucia-auth/adapter-sqlite": "^3.0.2",

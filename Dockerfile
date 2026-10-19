@@ -1,6 +1,6 @@
 # POSALANA en el VPS (Coolify): Astro con el adaptador de Node en modo standalone.
-# La base es un archivo SQLite en el volumen /data. El contenedor queda en UTC, como en
-# Vercel: el código calcula la hora de Argentina restando 3 horas.
+# La base es un archivo SQLite en el volumen /data. El contenedor queda en UTC a propósito:
+# el código calcula la hora de Argentina restando 3 horas.
 
 FROM node:22-bookworm-slim AS build
 WORKDIR /app

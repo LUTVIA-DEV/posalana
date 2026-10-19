@@ -1,5 +1,0 @@
-{
-  "redirects": [
-    { "source": "/(.*)", "destination": "https://posalana.lutvia.com/$1", "permanent": true }
-  ]
-}

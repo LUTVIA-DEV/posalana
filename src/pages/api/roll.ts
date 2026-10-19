@@ -2,7 +2,7 @@ import type { APIContext } from "astro";
 import db from "../../db/index.js";
 import { assignDailyChores } from "../../utils/chores.js";
 import { sendDiscordRoll } from "../../utils/discord.js";
-import { getArgentinaNow, getRollSchedule, getRollWindowStatus } from "../../utils/schedule.js";
+import { getArgentinaNow, getNextPlayDay, getRollSchedule, getRollWindowStatus } from "../../utils/schedule.js";
 
 function rollDie() {
     return Math.floor(Math.random() * 6) + 1;
@@ -18,16 +18,21 @@ export async function POST(context: APIContext): Promise<Response> {
 
     const userId = context.locals.user!.id;
 
-    // Solo se puede tirar dentro del horario oficial (el tester queda afuera de
-    // esta regla para poder probar la Cláusula Lomito a cualquier hora).
+    // Solo se puede tirar los días de juego y dentro del horario oficial (el tester
+    // queda afuera de esta regla para poder probar la Cláusula Lomito cuando quiera).
     if (context.locals.user?.role !== 'tester') {
         const schedule = await getRollSchedule(db);
-        const status = getRollWindowStatus(schedule, minutes);
+        const status = getRollWindowStatus(schedule, minutes, dateStr);
+        if (status === "no-play") {
+            const next = getNextPlayDay(schedule, dateStr);
+            return new Response(`Hoy no se juega. La próxima tirada es ${next.label}, de ${schedule.start} a ${schedule.end}.`, { status: 403 });
+        }
         if (status === "before") {
             return new Response(`Todavía no abrió la tirada: los dados se habilitan a las ${schedule.start}.`, { status: 403 });
         }
         if (status === "closed") {
-            return new Response(`La tirada de hoy cerró a las ${schedule.end}. Volvé mañana a las ${schedule.start}.`, { status: 403 });
+            const next = getNextPlayDay(schedule, dateStr);
+            return new Response(`La tirada de hoy cerró a las ${schedule.end}. Volvé ${next.label} a las ${schedule.start}.`, { status: 403 });
         }
     }
 

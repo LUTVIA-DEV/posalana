@@ -64,8 +64,9 @@ const currentSeason = getSeasonId(dateStr);
 
 // Horario de tirada y estado del veredicto automático de hoy
 const schedule = await getRollSchedule(db);
-const windowStatus = getRollWindowStatus(schedule, now.minutes);
+const windowStatus = getRollWindowStatus(schedule, now.minutes, dateStr);
 const windowStatusLabel = {
+    'no-play': { text: 'Hoy no se juega', cls: 'bg-foreground/10 text-foreground/60' },
     before: { text: `Cerrada · abre a las ${schedule.start}`, cls: 'bg-foreground/10 text-foreground/60' },
     open: { text: `Abierta · cierra a las ${schedule.end}`, cls: 'bg-secondary/10 text-secondary' },
     closed: { text: `Cerrada desde las ${schedule.end}`, cls: 'bg-primary/10 text-primary' },
@@ -73,6 +74,8 @@ const windowStatusLabel = {
 const autoVerdictToday = schedule.autoVerdictLastDate === dateStr;
 const autoVerdictLabel = !schedule.autoVerdictEnabled
     ? 'Desactivado'
+    : windowStatus === 'no-play'
+        ? 'Hoy no se juega, no sale veredicto'
     : autoVerdictToday
         ? (schedule.autoVerdictLastAt === 'sin tiradas' ? 'Hoy no se envió (nadie tiró)' : `Enviado hoy a las ${schedule.autoVerdictLastAt}`)
         : `Pendiente · sale a las ${schedule.end}`;
@@ -140,6 +143,11 @@ uniqueSeasons.sort((a, b) => {
                                 </div>
                             </div>
                             <p class="text-xs text-foreground/50 mt-1">Fuera de este horario nadie puede tirar (salvo <code>lomitotester</code>).</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold mb-1 text-foreground/80">Tirada especial</label>
+                            <input type="date" name="special_roll_date" value={schedule.specialDate || ''} class="w-full bg-foreground/5 border border-foreground/10 rounded-chico p-3 text-foreground" />
+                            <p class="text-xs text-foreground/50 mt-1">Se juega martes, miércoles y jueves. Elegí una fecha para habilitar la tirada un lunes, viernes o fin de semana, con el horario de arriba. Dejala vacía para no habilitar ninguna.{schedule.specialDate === dateStr && <strong class="text-foreground/70"> Hoy hay tirada especial.</strong>}</p>
                         </div>
                         <div>
                             <label class="flex items-center gap-3 cursor-pointer">

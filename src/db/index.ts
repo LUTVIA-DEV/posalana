@@ -115,8 +115,8 @@ db.executeMultiple(`
           const { hash } = await import('bcryptjs');
           const pass = await hash('lomitotester', 10);
           await db.execute({
-              sql: "INSERT INTO user (id, username, password_hash, avatar_url, role) VALUES (?, ?, ?, ?, ?)",
-              args: ['tester-lomito-id', 'lomitotester', pass, 'https://api.dicebear.com/7.x/avataaars/svg?seed=lomitotester', 'tester']
+              sql: "INSERT INTO user (id, username, display_name, password_hash, avatar_url, role) VALUES (?, ?, ?, ?, ?, ?)",
+              args: ['tester-lomito-id', 'lomitotester', 'Lomito', pass, 'https://api.dicebear.com/7.x/avataaars/svg?seed=lomitotester', 'tester']
           });
           console.log("Created lomitotester account");
       }

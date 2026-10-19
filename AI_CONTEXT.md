@@ -6,7 +6,7 @@ Si sos un agente de Inteligencia Artificial (AI) leyendo este repositorio, este 
 ## 1. Lógica del Juego (Core Business Logic)
 - **Tirada Diaria:** Los usuarios tiran 4 dados (d6) una vez por día en la ruta `/api/roll`.
 - **Horario de Tirada (desde 13/10/2026):** Solo se puede tirar de **10:00 a 12:30** (GMT-3). Lo valida `/api/roll` (403 fuera de horario; el usuario `tester` queda exceptuado) y el inicio muestra el botón solo con la ventana abierta (el hero `#hero-container` también se refresca por polling). La lógica vive en `src/utils/schedule.ts`; el horario es configurable desde `/admin` (claves `roll_window_start` / `roll_window_end` en `settings`, con defaults en el código).
-- **Veredicto Automático:** Al cierre de la tirada se publica solo el veredicto final en Discord (`maybeSendAutoVerdict`). Se dispara desde el middleware en la primera request posterior al cierre (el polling de 8s del inicio lo hace salir casi en el momento) y desde un cron de Vercel (`vercel.json` → `/api/cron/verdict`, protegido con `CRON_SECRET` si está configurado) como red de seguridad. Es idempotente: hace un "claim" atómico sobre `settings.auto_verdict_last_date` y guarda la hora de envío en `auto_verdict_last_at`; si Discord falla, libera el claim para reintentar. **Si ese día nadie tiró (ej. lunes, viernes y fines de semana, que no se juega) no se envía ningún mensaje**: queda registrado como `sin tiradas`. Se puede desactivar desde `/admin` (`auto_verdict_enabled`).
+- **Veredicto Automático:** Al cierre de la tirada se publica solo el veredicto final en Discord (`maybeSendAutoVerdict`). Se dispara desde el middleware en la primera request posterior al cierre (el polling de 8s del inicio lo hace salir casi en el momento) y desde una tarea programada de Coolify a las 16:00 UTC (13:00 de Argentina) que llama a `/api/cron/verdict` con `CRON_SECRET`, como red de seguridad. Es idempotente: hace un "claim" atómico sobre `settings.auto_verdict_last_date` y guarda la hora de envío en `auto_verdict_last_at`; si Discord falla, libera el claim para reintentar. **Si ese día nadie tiró (ej. lunes, viernes y fines de semana, que no se juega) no se envía ningún mensaje**: queda registrado como `sin tiradas`. Se puede desactivar desde `/admin` (`auto_verdict_enabled`).
 - **Aviso de Horario Nuevo:** `ScheduleNotice.astro` es un pop-up que se muestra en el inicio una vez por día (localStorage) hasta `SCHEDULE_NOTICE_UNTIL` (18/10/2026). Pasada esa fecha deja de montarse solo; se puede borrar junto con la constante.
 - **Asignación de Tareas:** Se comparan los dados secuencialmente (primer dado, luego segundo, tercero y cuarto de menor a mayor). El que saca el tiro más bajo tiene la peor suerte y le toca la peor tarea (Lava - LA). El siguiente "Saca" (SA), el siguiente "Pone" (PO), y los demás se salvan ("Nada" o "NA" con emoji 🎉).
 - **Cláusula Lomito:** Si dos usuarios sacan **exactamente los mismos 4 dados en el mismo orden**, se activa la "Cláusula Lomito". 
@@ -21,8 +21,8 @@ Si sos un agente de Inteligencia Artificial (AI) leyendo este repositorio, este 
 
 ## 2. Arquitectura y Tecnologías
 - **Frontend/Backend:** Astro con SSR activado. NO es un sitio estático puro.
-- **Hosting:** Vercel (Serverless Adapter).
-- **Base de Datos:** SQLite alojada en Turso (usando `@libsql/client`).
+- **Hosting (desde el 19/10/2026):** VPS del foro de Lutvia (Contabo) con Coolify, en `https://posalana.lutvia.com`. Astro corre con `@astrojs/node` en modo standalone, desde el `Dockerfile` (contenedor en UTC). El proyecto de Coolify es **POSALANA** (app `cll3jybiz9exp4891rowd0r7`), separado del foro. Antes estaba en Vercel: `posalana.vercel.app` redirige al dominio nuevo (`vercel.json`), y `astro.config.mjs` todavía usa el adaptador de Vercel si el build corre ahí.
+- **Base de Datos:** SQLite en un archivo (`DATABASE_URL=file:/data/posalana.db`), en el volumen de Docker `cll3jybiz9exp4891rowd0r7-posalana-data`, en modo WAL y con índice por `roll(date)`. Se accede con `@libsql/client`. Antes estaba en Turso; `scripts/exportar-turso.mjs` es el que hizo la copia.
 - **Autenticación:** Sistema propio basado en cookies en Astro, contraseñas hasheadas con `bcryptjs`.
 - **Estilos:** Tailwind CSS (versión v4).
 - **Componentes Compartidos:**
@@ -30,7 +30,7 @@ Si sos un agente de Inteligencia Artificial (AI) leyendo este repositorio, este 
   - `VerdictFab.astro`: Burbuja flotante (estilo WhatsApp) que se monta en `Layout.astro` solo para usuarios `admin`. Abre un panel de confirmación y llama a `/api/admin/publish-verdict`. Sus eventos se delegan en `document` una única vez para sobrevivir a los swaps del `ClientRouter`.
 - **Actualización en Tiempo Real (Short Polling):**
   - Implementado en `index.astro` mediante consultas periódicas cada 8 segundos al servidor.
-  - **Ahorro de recursos (Page Visibility API):** Si la pestaña se minimiza o pasa a segundo plano, el polling se suspende automáticamente para evitar consultas innecesarias a Turso. Al volver a enfocar la página, se reanuda inmediatamente.
+  - **Ahorro de recursos (Page Visibility API):** Si la pestaña se minimiza o pasa a segundo plano, el polling se suspende automáticamente para evitar consultas innecesarias a la base. Al volver a enfocar la página, se reanuda inmediatamente.
   - **Reemplazo Atómico:** Compara e inyecta únicamente los nodos `#ranking-container` y `#lomito-container` usando `DOMParser` para evitar refrescar la página. Si se detecta un nuevo Lomito, dispara confetti automáticamente.
 - **Notificaciones de Discord:**
   - Requiere configurar `DISCORD_WEBHOOK_URL` en las variables de entorno.

@@ -1,0 +1,12 @@
+node_modules
+dist
+.astro
+.vercel
+.git
+.claude
+.env
+.env.*
+*.db
+*.db-*
+scratch_test.js
+seed_players.js

@@ -67,10 +67,24 @@ db.executeMultiple(`
       username TEXT NOT NULL,
       created_at TEXT NOT NULL
   );
+
+  -- Casi todas las consultas filtran las tiradas por fecha
+  CREATE INDEX IF NOT EXISTS idx_roll_date ON roll(date);
 `).catch(console.error);
 
 // Migrations
 (async () => {
+  // Base en un archivo local (VPS): modo WAL para que las lecturas no esperen a las
+  // escrituras, y espera de hasta 5 s si la base está ocupada en vez de fallar.
+  if (dbUrl.startsWith("file:")) {
+      try {
+          await db.execute("PRAGMA journal_mode = WAL");
+          await db.execute("PRAGMA busy_timeout = 5000");
+      } catch (e) {
+          console.error("No se pudo configurar SQLite:", e);
+      }
+  }
+
   try {
       await db.execute("ALTER TABLE user ADD COLUMN role TEXT DEFAULT 'user'");
   } catch (e) {}

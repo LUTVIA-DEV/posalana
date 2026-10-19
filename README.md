@@ -22,15 +22,15 @@ La forma definitiva, justa y basada puramente en el azar para dividir las tareas
 *   **Exenciones de Tarea Automáticas:** Las personas con más puntos en una tarea durante la temporada anterior quedan automáticamente eximidas de realizarla en la temporada actual, con soporte para empates, anulaciones manuales y base cases seguros contra loops infinitos.
 *   **Panel de Administración (Admin Dashboard):** Permite configurar variables, promover administradores, eliminar cuentas, anular tiradas accidentales, cargar puntos manuales históricos y gestionar exenciones (crear/borrar).
 *   **Gestión Rápida de Avatares:** El administrador puede cambiar o eliminar las fotos de perfil de todos los usuarios directamente haciendo clic sobre su avatar en el padrón, comprimiendo la imagen en el navegador antes de subirla.
-*   **🔄 Actualización en Tiempo Real:** El ranking de la página de inicio se actualiza automáticamente cada 8 segundos sin necesidad de refrescar la página. Utiliza la *Page Visibility API* para pausar automáticamente las consultas al servidor si el usuario cambia de pestaña, minimizando el consumo de base de datos Turso.
+*   **🔄 Actualización en Tiempo Real:** El ranking de la página de inicio se actualiza automáticamente cada 8 segundos sin necesidad de refrescar la página. Utiliza la *Page Visibility API* para pausar automáticamente las consultas al servidor si el usuario cambia de pestaña, minimizando las consultas a la base.
 *   **👾 Notificaciones de Discord:** Integración automática mediante Webhooks de Discord que notifica al instante cada tirada de dados realizada. El veredicto oficial sale automáticamente al cierre de la tirada y, además, el administrador tiene una burbuja flotante visible en todas las páginas para publicarlo o reenviarlo a mano de tareas del día (que incluye la cantidad de jugadores que tiraron).
 
 ## 🛠️ Tecnologías Utilizadas
 
-*   **Framework:** [Astro](https://astro.build/) (con adaptador Serverless para Vercel y SSR activado).
+*   **Framework:** [Astro](https://astro.build/) con SSR, sobre el adaptador de Node (modo standalone).
 *   **Estilos:** [Tailwind CSS v4](https://tailwindcss.com/) con el sistema de diseño de Lutvia ([LUTVIA-DEV/lutvia-ds](https://github.com/LUTVIA-DEV/lutvia-ds) v2.0.0, copiado en `src/styles/lutvia/`). Las decisiones de diseño están en [`docs/diseno.md`](docs/diseno.md) y las piezas propias del juego en [`docs/componentes/`](docs/componentes/).
-*   **Base de Datos:** SQLite alojada en la nube usando [Turso](https://turso.tech/) a través de `@libsql/client`.
-*   **Despliegue:** Preparado para hostear de manera **100% gratuita y para siempre** en [Vercel](https://vercel.com/).
+*   **Base de Datos:** SQLite en un archivo local, a través de `@libsql/client`.
+*   **Despliegue:** VPS propio con Coolify y Docker (`Dockerfile` en la raíz).
 
 ---
 
@@ -71,28 +71,18 @@ La aplicación va a estar disponible en `http://localhost:4321`. La base de dato
 
 ---
 
-## ☁️ Despliegue en Producción (Vercel + Turso)
+## ☁️ Despliegue en Producción (VPS con Coolify)
 
-Este proyecto está configurado para un despliegue gratuito y automático en Vercel.
+POSALANA corre en el VPS del foro de Lutvia, con [Coolify](https://coolify.io/), en **https://posalana.lutvia.com**. Hasta el 19/10/2026 estuvo en Vercel con la base en Turso; `posalana.vercel.app` ahora redirige al dominio nuevo.
 
-### 1. Base de Datos en Turso (Gratis)
-Como Vercel es un entorno "Serverless" (sin estado), la base de datos no puede vivir en un archivo local. Necesitamos Turso:
-1. Entrá a [Turso](https://turso.tech/) y creá una cuenta con GitHub.
-2. Creá una base de datos nueva.
-3. Obtené la URL de la base de datos (suele ser `libsql://tu-base.turso.io`) y el Token de Autenticación.
-
-### 2. Despliegue en Vercel (Gratis)
-1. Subí tu repositorio a GitHub.
-2. Entrá a [Vercel](https://vercel.com/) y creá una cuenta con GitHub.
-3. Tocá "Add New Project" y elegí tu repositorio de POSALANA.
-4. En la sección "Environment Variables" antes de darle a Deploy, agregá:
-   - `DATABASE_URL`: La URL de tu base de Turso.
-   - `DATABASE_AUTH_TOKEN`: El token de tu base de Turso.
-   - `DISCORD_WEBHOOK_URL`: La URL del Webhook del canal de Discord (opcional, para notificaciones).
-   - `CRON_SECRET`: Un texto secreto cualquiera (opcional pero recomendado). Vercel lo usa para autenticar el cron diario de `vercel.json` que asegura el veredicto automático.
-5. Tocá **Deploy**.
-
-¡Listo! A partir de ahora, cada vez que hagas un `git push` a tu rama principal (`main`), Vercel va a compilar y actualizar la página automáticamente.
+- **Cómo se construye:** Coolify toma el repo `LUTVIA-DEV/posalana` (rama `main`) y construye el `Dockerfile`: Astro con el adaptador de Node en modo standalone, en el puerto 4321.
+- **Base de datos:** un archivo SQLite en `/data/posalana.db`, dentro de un volumen persistente de Docker. No hace falta ningún servicio aparte.
+- **Variables de entorno** (en Coolify → POSALANA → posalana → Environment Variables):
+  - `SITE_URL`: `https://posalana.lutvia.com`, para los enlaces y el avatar del bot en Discord.
+  - `DISCORD_WEBHOOK_URL`: el webhook del canal de Discord.
+  - `CRON_SECRET`: un texto secreto que protege `/api/cron/verdict`.
+  - `DATABASE_URL` ya viene en el `Dockerfile` (`file:/data/posalana.db`).
+- **Veredicto automático:** además del middleware, una tarea programada de Coolify llama a `/api/cron/verdict` todos los días a las 16:00 UTC (13:00 de Argentina).
 
 ## 📜 Reglas del Juego
 

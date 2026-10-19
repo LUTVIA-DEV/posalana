@@ -11,12 +11,11 @@ today.setHours(today.getHours() - 3);
 const todayStr = today.toISOString().split('T')[0];
 
 const lastLomitoRes = await db.execute(`
-	SELECT r1.date
-	FROM roll r1
-	JOIN roll r2 ON r1.date = r2.date AND r1.id != r2.id
-		AND r1.die1 = r2.die1 AND r1.die2 = r2.die2
-		AND r1.die3 = r2.die3 AND r1.die4 = r2.die4
-	ORDER BY r1.date DESC
+	SELECT date
+	FROM roll
+	GROUP BY date, die1, die2, die3, die4
+	HAVING COUNT(*) > 1
+	ORDER BY date DESC
 	LIMIT 1
 `);
 

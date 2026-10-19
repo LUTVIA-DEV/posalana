@@ -121,6 +121,11 @@ const schedule = await getRollSchedule(db);
               En caso de empate, desempata el 2º dado, y así sucesivamente.
             </li>
             <li>
+              Se juega <strong>martes, miércoles y jueves</strong>. Lunes,
+              viernes y fines de semana no se tira, salvo que el admin habilite
+              una tirada especial ese día.
+            </li>
+            <li>
               Solo se puede tirar de <strong>{schedule.start}</strong> a
               <strong>{schedule.end}</strong>. A las {schedule.end} la mesa se
               cierra y el <strong class="text-primary">veredicto final</strong>
@@ -182,8 +187,8 @@ const schedule = await getRollSchedule(db);
             {schedule.start} <span class="text-foreground/30 font-normal">a</span> {schedule.end}
           </p>
           <p class="text-sm text-foreground/70 relative z-10">
-            Fuera de ese horario la app no deja tirar. Si no tiraste antes del
-            cierre, ese día no jugás.
+            Martes, miércoles y jueves. Fuera de ese horario la app no deja
+            tirar. Si no tiraste antes del cierre, ese día no jugás.
           </p>
         </div>
         <div

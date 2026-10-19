@@ -2,7 +2,6 @@
 import { defineConfig } from 'astro/config';
 
 import tailwindcss from '@tailwindcss/vite';
-import vercel from '@astrojs/vercel';
 import node from '@astrojs/node';
 
 // https://astro.build/config
@@ -12,9 +11,8 @@ export default defineConfig({
     plugins: [tailwindcss()]
   },
 
-  // En el VPS (Coolify) corre como servidor de Node; en Vercel, con su adaptador,
-  // hasta que se apague (Vercel define VERCEL=1 al construir).
-  adapter: process.env.VERCEL ? vercel() : node({ mode: 'standalone' }),
+  // Corre como servidor de Node en el VPS (Coolify), desde el Dockerfile
+  adapter: node({ mode: 'standalone' }),
   security: {
     checkOrigin: false
   }

@@ -1,6 +1,6 @@
 # Diseño de POSALANA
 
-POSALANA sigue las reglas mínimas de la marca de [LUTVIA-DEV/lutvia-ds](https://github.com/LUTVIA-DEV/lutvia-ds) (v2.0.0). El CSS del sistema está copiado en `src/styles/lutvia/` (el repo es privado y Vercel no puede instalarlo como dependencia); para actualizar, se copia `css/lutvia.css` y `css/tailwind.css` del tag nuevo. Todo lo demás lo decide el proyecto y queda documentado acá. Las piezas propias tienen ficha en [`componentes/`](componentes/).
+POSALANA sigue las reglas mínimas de la marca de [LUTVIA-DEV/lutvia-ds](https://github.com/LUTVIA-DEV/lutvia-ds) (v2.0.0). El CSS del sistema está copiado en `src/styles/lutvia/` (el repo es privado y el build no puede descargarlo como dependencia); para actualizar, se copia `css/lutvia.css` y `css/tailwind.css` del tag nuevo. Todo lo demás lo decide el proyecto y queda documentado acá. Las piezas propias tienen ficha en [`componentes/`](componentes/).
 
 ## Lo que viene del sistema
 

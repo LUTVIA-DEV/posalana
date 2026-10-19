@@ -6,7 +6,7 @@ import UserAvatar from '../components/UserAvatar.astro';
 import DiceDisplay from '../components/DiceDisplay.astro';
 import ScheduleNotice from '../components/ScheduleNotice.astro';
 import { formatDate } from '../utils/date.js';
-import { getArgentinaNow, getRollSchedule, getRollWindowStatus, SCHEDULE_NOTICE_UNTIL } from '../utils/schedule.js';
+import { getArgentinaNow, getNextPlayDay, getRollSchedule, getRollWindowStatus, SCHEDULE_NOTICE_UNTIL } from '../utils/schedule.js';
 
 if (!Astro.locals.user) {
 	return Astro.redirect('/login');
@@ -18,7 +18,8 @@ const user = Astro.locals.user;
 const now = getArgentinaNow();
 const dateStr = now.dateStr;
 const schedule = await getRollSchedule(db);
-const windowStatus = getRollWindowStatus(schedule, now.minutes);
+const windowStatus = getRollWindowStatus(schedule, now.minutes, dateStr);
+const nextPlay = getNextPlayDay(schedule, dateStr);
 const canRoll = windowStatus === 'open' || user.role === 'tester';
 const showScheduleNotice = dateStr <= SCHEDULE_NOTICE_UNTIL;
 
@@ -226,6 +227,15 @@ const savedPlayers = sortedRolls.filter(r => rollChoreMap.get(r.id)?.code === 'N
                         </button>
                     </form>
                     </>
+                    ) : windowStatus === 'no-play' ? (
+                    <>
+                        <p class="text-foreground/60 mb-8 max-w-md mx-auto text-pretty">Hoy los dados descansan: se juega martes, miércoles y jueves.</p>
+                        <div class="inline-flex flex-col items-center gap-1 bg-foreground/5 border border-foreground/10 px-8 py-5 rounded-bloque">
+                            <span class="text-xs font-bold uppercase tracking-widest text-foreground/50"><i class="fa-solid fa-mug-hot mr-1"></i> Hoy no se juega</span>
+                            <span class="block text-2xl font-black text-foreground first-letter:uppercase">{nextPlay.label}</span>
+                            <span class="text-xs text-foreground/50 font-medium">es la próxima tirada, de {schedule.start} a {schedule.end}</span>
+                        </div>
+                    </>
                     ) : windowStatus === 'before' ? (
                     <>
                         <p class="text-foreground/60 mb-8 max-w-md mx-auto text-pretty">Los dados todavía están guardados. Paciencia, que el destino tiene horario.</p>
@@ -240,7 +250,7 @@ const savedPlayers = sortedRolls.filter(r => rollChoreMap.get(r.id)?.code === 'N
                         <p class="text-foreground/60 mb-8 max-w-md mx-auto text-pretty">La mesa está cerrada y el veredicto final ya es definitivo. Si no tiraste, hoy no jugás.</p>
                         <div class="inline-flex flex-col items-center gap-1 bg-primary/5 border border-primary/20 px-8 py-5 rounded-bloque">
                             <span class="text-xs font-bold uppercase tracking-widest text-primary"><i class="fa-solid fa-door-closed mr-1"></i> Tirada cerrada a las {schedule.end}</span>
-                            <span class="text-sm text-foreground/60 font-medium">Volvé mañana de {schedule.start} a {schedule.end}</span>
+                            <span class="text-sm text-foreground/60 font-medium">Volvé {nextPlay.label} de {schedule.start} a {schedule.end}</span>
                         </div>
                     </>
                     )}

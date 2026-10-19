@@ -1,7 +1,7 @@
 import { colorLutviaEntero } from "./tokens.js";
 
 // Dirección pública del sitio, para los enlaces y el avatar del bot en Discord
-const SITE_URL = (process.env.SITE_URL || "https://posalana.vercel.app").replace(/\/$/, "");
+const SITE_URL = (process.env.SITE_URL || "https://posalana.lutvia.com").replace(/\/$/, "");
 const BOT_AVATAR_URL = `${SITE_URL}/bot-avatar.png`;
 
 export async function sendDiscordRoll(

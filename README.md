@@ -12,7 +12,7 @@ La forma definitiva, justa y basada puramente en el azar para dividir las tareas
 ## 🌟 Características Principales
 
 *   **Autenticación Integrada:** Registro e inicio de sesión seguro usando [Lucia Auth](https://lucia-auth.com/).
-*   **Tirada Diaria Única y con Horario:** Cada usuario solo puede tirar los dados una vez por día y solo dentro del horario oficial (por defecto de **10:00 a 12:30**, configurable desde el panel admin). El sistema bloquea intentos múltiples y fuera de hora.
+*   **Tirada Diaria Única y con Horario:** Se juega martes, miércoles y jueves (el admin puede habilitar una tirada especial otro día). Cada usuario solo puede tirar los dados una vez por día y solo dentro del horario oficial (por defecto de **10:00 a 12:30**, configurable desde el panel admin). El sistema bloquea intentos múltiples y fuera de hora.
 *   **⏰ Veredicto Automático:** Al cierre de la tirada (12:30) el veredicto final se publica solo en Discord, sin que nadie tenga que apretar nada. Los días en que nadie tiró no se manda ningún mensaje.
 *   **Ranking Automático:** Calcula matemáticamente quién saca el número más bajo y asigna automáticamente la peor tarea (Lava), la intermedia (Saca) y la más leve (Pone).
 *   **🥪 Cláusula Lomito:** Si dos personas sacan **exactamente los mismos dados en el mismo orden** en el mismo día, se activa el cartel festivo de *Lomito* y el contador de "Días sin Lomito" se reinicia a cero.
@@ -73,7 +73,7 @@ La aplicación va a estar disponible en `http://localhost:4321`. La base de dato
 
 ## ☁️ Despliegue en Producción (VPS con Coolify)
 
-POSALANA corre en el VPS del foro de Lutvia, con [Coolify](https://coolify.io/), en **https://posalana.lutvia.com**. Hasta el 19/10/2026 estuvo en Vercel con la base en Turso; `posalana.vercel.app` ahora redirige al dominio nuevo.
+POSALANA corre en el VPS del foro de Lutvia, con [Coolify](https://coolify.io/), en **https://posalana.lutvia.com** desde el 19/10/2026. La dirección anterior redirige sola al dominio nuevo.
 
 - **Cómo se construye:** Coolify toma el repo `LUTVIA-DEV/posalana` (rama `main`) y construye el `Dockerfile`: Astro con el adaptador de Node en modo standalone, en el puerto 4321.
 - **Base de datos:** un archivo SQLite en `/data/posalana.db`, dentro de un volumen persistente de Docker. No hace falta ningún servicio aparte.

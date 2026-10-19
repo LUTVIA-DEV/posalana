@@ -126,8 +126,8 @@ let handledDate: string | null = null;
  * Publica el veredicto final automático si ya pasó la hora de cierre y todavía
  * no se publicó hoy. Es idempotente: el "claim" en `settings` es atómico, así
  * que aunque lleguen varios requests a la vez solo uno envía el mensaje.
- * Se dispara desde el middleware (cualquier visita, incluido el polling del
- * inicio) y desde la tarea programada de Coolify como red de seguridad.
+ * Se dispara sola cada minuto (startAutoVerdictTimer), desde el middleware en
+ * cada visita y desde la tarea programada de Coolify como red de seguridad.
  */
 export async function maybeSendAutoVerdict(db: Client): Promise<"sent" | "skipped" | "no-rolls"> {
     const now = getArgentinaNow();
@@ -169,4 +169,20 @@ export async function maybeSendAutoVerdict(db: Client): Promise<"sent" | "skippe
         }).catch(() => {});
         throw err;
     }
+}
+
+/**
+ * Revisa cada minuto si ya cerró la tirada y, si corresponde, publica el veredicto
+ * automático. Así sale a la hora del cierre aunque nadie tenga la app abierta.
+ * Corre una sola vez por proceso (el servidor de Node es de larga duración).
+ */
+export function startAutoVerdictTimer(db: Client) {
+    const g = globalThis as typeof globalThis & { __posalanaAutoVerdictTimer?: ReturnType<typeof setInterval> };
+    if (g.__posalanaAutoVerdictTimer) return;
+    const tick = () => {
+        maybeSendAutoVerdict(db).catch((e) => console.error("No se pudo publicar el veredicto automático:", e));
+    };
+    g.__posalanaAutoVerdictTimer = setInterval(tick, 60_000);
+    g.__posalanaAutoVerdictTimer.unref?.();
+    tick();
 }

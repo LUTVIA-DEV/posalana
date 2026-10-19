@@ -1,7 +1,11 @@
 import { lucia } from "./auth.js";
 import { defineMiddleware } from "astro:middleware";
 import db from "./db/index.js";
-import { maybeSendAutoVerdict } from "./utils/schedule.js";
+import { maybeSendAutoVerdict, startAutoVerdictTimer } from "./utils/schedule.js";
+
+// El veredicto automático se revisa solo cada minuto desde que el servidor atiende
+// la primera request (el health check de Docker la hace a los pocos segundos de arrancar).
+startAutoVerdictTimer(db);
 
 export const onRequest = defineMiddleware(async (context, next) => {
 	const sessionId = context.cookies.get(lucia.sessionCookieName)?.value ?? null;

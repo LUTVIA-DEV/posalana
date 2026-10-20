@@ -14,8 +14,7 @@ Lo que quedó abierto después de la mudanza al VPS (19/10/2026). Cuando algo se
 
 | Cuándo | Qué |
 |---|---|
-| Después del **20/10/2026** | Borrar en Coolify la tarea `aviso-mudanza-20-10` y la variable `AVISO_DISCORD`. No vuelven a enviar nada (el comando controla la fecha), pero sobran |
-| Después del **20/10/2026** | Borrar el archivo local `.env.turso`: tiene el token de Turso (vence a los 7 días) y el **webhook real de Discord** |
+| Ya | Borrar el archivo local `.env.turso`: tiene el token de Turso (vence a los 7 días) y el **webhook real de Discord** |
 | Desde el **~18/11/2026**, con el respaldo externo andando | Borrar la base de Turso. En Vercel, borrar las variables `DATABASE_URL`, `DATABASE_AUTH_TOKEN` y `DISCORD_WEBHOOK_URL` del proyecto `posalana` |
 | Cuando ya nadie use el link viejo | Decidir si se borra el proyecto de Vercel. Hoy solo sirve el redirect de `posalana.vercel.app` a `posalana.lutvia.com`; si se borra, los links viejos (por ejemplo, en mensajes de Discord) dejan de funcionar |
 

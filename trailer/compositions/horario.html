@@ -80,7 +80,7 @@
     ["#ho-mar", "#ho-mie", "#ho-jue"].forEach((sel, i) => {
       const t = 0.5 + i * 0.5;
       tl.set(sel, { backgroundColor: "#ffffff", borderColor: "#ffffff", color: "#3c3c3b", boxShadow: "0 18px 40px rgba(60,60,59,0.16)" }, t);
-      tl.fromTo(sel, { scale: 1.2 }, { scale: 1, duration: 0.27, ease: "back.out(2.2)" }, t);
+      tl.fromTo(sel, { scale: 1.2 }, { scale: 1, duration: 0.27, ease: "back.out(2.2)", immediateRender: false }, t);
     });
     // Compás 2: el horario en cifras gigantes
     tl.fromTo("#ho-h1", { opacity: 0, x: -200 }, { opacity: 1, x: 0, duration: 0.3, ease: "power4.out" }, 2);

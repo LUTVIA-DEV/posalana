@@ -149,7 +149,7 @@
         rodar(d, 0, fin, f * 31 + k * 7 + 3);
         tl.fromTo(d, { rotation: -14 }, { rotation: 14, duration: 0.1, ease: "none", repeat: Math.round(fin / 0.1) - 1, yoyo: true }, 0);
         tl.to(d, { rotation: 0, duration: 0.01 }, fin);
-        tl.fromTo(d, { scale: 1.2 }, { scale: 1, duration: 0.27, ease: "back.out(2.2)" }, fin);
+        tl.fromTo(d, { scale: 1.2 }, { scale: 1, duration: 0.27, ease: "back.out(2.2)", immediateRender: false }, fin);
       });
     }
     // Se ordenan de menor a mayor: Juli, Tano, Mica, Rulo
@@ -163,7 +163,7 @@
       const d = `${fila} .dado:first-child`;
       tl.set(d, { backgroundColor: color }, 3.2 + i * 0.25);
       tl.set(`${d} i.on`, { backgroundColor: "#ffffff" }, 3.2 + i * 0.25);
-      tl.fromTo(d, { scale: 1.25 }, { scale: 1, duration: 0.27, ease: "back.out(2.2)" }, 3.2 + i * 0.25);
+      tl.fromTo(d, { scale: 1.25 }, { scale: 1, duration: 0.27, ease: "back.out(2.2)", immediateRender: false }, 3.2 + i * 0.25);
     });
     tl.fromTo("#ti-sub", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.3, ease: "power4.out" }, 3.2);
     window.__timelines["tirada"] = tl;

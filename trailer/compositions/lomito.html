@@ -161,7 +161,7 @@
       const par = `#lo-f1 .dado:nth-child(${k}), #lo-f2 .dado:nth-child(${k})`;
       tl.set(par, { backgroundColor: "#cc66ff" }, 1.3 + (k - 1) * 0.15);
       tl.set(`#lo-f1 .dado:nth-child(${k}) i.on, #lo-f2 .dado:nth-child(${k}) i.on`, { backgroundColor: "#ffffff" }, 1.3 + (k - 1) * 0.15);
-      tl.fromTo(par, { scale: 1.25 }, { scale: 1, duration: 0.2, ease: "back.out(2.2)" }, 1.3 + (k - 1) * 0.15);
+      tl.fromTo(par, { scale: 1.25 }, { scale: 1, duration: 0.2, ease: "back.out(2.2)", immediateRender: false }, 1.3 + (k - 1) * 0.15);
     }
     // Chocan
     tl.to("#lo-f1", { y: 125, duration: 0.2, ease: "power3.in" }, 2.25);

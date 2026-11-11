@@ -1,0 +1,92 @@
+<template>
+  <style>
+    #root {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      font-family: "Montserrat", sans-serif;
+      background: #00cccc;
+      color: #3c3c3b;
+    }
+    #ho-dias {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 170px;
+      display: flex;
+      justify-content: center;
+      gap: 36px;
+    }
+    .ho-dia {
+      width: 250px;
+      height: 250px;
+      border-radius: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 76px;
+      font-weight: 900;
+      border: 6px solid rgba(60, 60, 59, 0.25);
+      color: rgba(60, 60, 59, 0.35);
+    }
+    .ho-dia.si {
+      background: #ffffff;
+      border-color: #ffffff;
+      color: #3c3c3b;
+      box-shadow: 0 18px 40px rgba(60, 60, 59, 0.16);
+    }
+    #ho-hora {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 560px;
+      text-align: center;
+      font-size: 250px;
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+    }
+    #ho-hora span { display: inline-block; }
+    #ho-a { font-size: 110px; vertical-align: middle; padding: 0 30px; }
+    #ho-sub {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 860px;
+      text-align: center;
+      font-size: 52px;
+      font-weight: 700;
+    }
+  </style>
+  <div id="root" data-composition-id="horario" data-width="1920" data-height="1080">
+    <div id="ho-dias">
+      <div class="ho-dia" id="ho-lun">LUN</div>
+      <div class="ho-dia" id="ho-mar">MAR</div>
+      <div class="ho-dia" id="ho-mie">MIÉ</div>
+      <div class="ho-dia" id="ho-jue">JUE</div>
+      <div class="ho-dia" id="ho-vie">VIE</div>
+    </div>
+    <div id="ho-hora" class="clip" data-start="0" data-duration="4">
+      <span id="ho-h1">10:00</span><span id="ho-a">a</span><span id="ho-h2">12:30</span>
+    </div>
+    <div id="ho-sub" class="clip" data-start="0" data-duration="4">Martes a jueves, una sola tirada por día</div>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    // Las cinco fichas entran juntas y apagadas
+    tl.fromTo(".ho-dia", { y: -320 }, { y: 0, duration: 0.33, ease: "power4.out", stagger: 0.04 }, 0);
+    // MAR, MIÉ y JUE se encienden una por tiempo
+    ["#ho-mar", "#ho-mie", "#ho-jue"].forEach((sel, i) => {
+      const t = 0.5 + i * 0.5;
+      tl.set(sel, { backgroundColor: "#ffffff", borderColor: "#ffffff", color: "#3c3c3b", boxShadow: "0 18px 40px rgba(60,60,59,0.16)" }, t);
+      tl.fromTo(sel, { scale: 1.2 }, { scale: 1, duration: 0.27, ease: "back.out(2.2)" }, t);
+    });
+    // Compás 2: el horario en cifras gigantes
+    tl.fromTo("#ho-h1", { opacity: 0, x: -200 }, { opacity: 1, x: 0, duration: 0.3, ease: "power4.out" }, 2);
+    tl.fromTo("#ho-a", { opacity: 0 }, { opacity: 1, duration: 0.2 }, 2.25);
+    tl.fromTo("#ho-h2", { opacity: 0, x: 200 }, { opacity: 1, x: 0, duration: 0.3, ease: "power4.out" }, 2.5);
+    tl.fromTo("#ho-sub", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.3, ease: "power4.out" }, 0.9);
+    window.__timelines["horario"] = tl;
+  </script>
+</template>

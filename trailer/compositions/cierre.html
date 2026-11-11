@@ -1,0 +1,60 @@
+<template>
+  <style>
+    #root {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      font-family: "Montserrat", sans-serif;
+      background: #ededed;
+      color: #3c3c3b;
+    }
+    #ci-centro {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 40px;
+    }
+    #ci-wordmark {
+      display: flex;
+      font-size: 270px;
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      line-height: 1;
+    }
+    #ci-wordmark span { display: inline-block; }
+    #ci-po { color: #ea2a58; }
+    #ci-sa { color: #00cccc; }
+    #ci-la { color: #cc66ff; }
+    #ci-na { color: #3c3c3b; }
+    #ci-lema { font-size: 64px; font-weight: 700; }
+    #ci-url {
+      font-size: 60px;
+      font-weight: 900;
+      background: #3c3c3b;
+      color: #ffffff;
+      padding: 22px 56px;
+      border-radius: 999px;
+      letter-spacing: 0.01em;
+    }
+  </style>
+  <div id="root" data-composition-id="cierre" data-width="1920" data-height="1080">
+    <div id="ci-centro">
+      <div id="ci-wordmark"><span id="ci-po">PO</span><span id="ci-sa">SA</span><span id="ci-la">LA</span><span id="ci-na">NA</span></div>
+      <div id="ci-lema">Que decidan los dados 🎲</div>
+      <div id="ci-url">posalana.lutvia.com</div>
+    </div>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    // El wordmark golpea por sílabas: cada una cae justo en un tiempo
+    ["#ci-po", "#ci-sa", "#ci-la", "#ci-na"].forEach((sel, i) => {
+      tl.fromTo(sel, { opacity: 0, scale: 2.2, y: -80 }, { opacity: 1, scale: 1, y: 0, duration: 0.22, ease: "power4.in" }, 0.28 + i * 0.5);
+    });
+    tl.fromTo("#ci-lema", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.3, ease: "power4.out" }, 2.1);
+    tl.fromTo("#ci-url", { scale: 0 }, { scale: 1, duration: 0.35, ease: "back.out(2.2)" }, 2.4);
+    window.__timelines["cierre"] = tl;
+  </script>
+</template>

@@ -1,0 +1,125 @@
+<template>
+  <style>
+    #root {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      font-family: "Montserrat", sans-serif;
+      background: #ededed;
+    }
+    .j-titulo {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 150px;
+      text-align: center;
+      font-size: 128px;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      color: #3c3c3b;
+      line-height: 1;
+    }
+    .j-titulo b { color: #ea2a58; }
+    #j-fila {
+      position: absolute;
+      left: 160px;
+      right: 160px;
+      top: 390px;
+      display: flex;
+      justify-content: space-between;
+    }
+    .j-jugador {
+      width: 330px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 22px;
+    }
+    .j-avatar {
+      width: 230px;
+      height: 230px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 120px;
+      font-weight: 900;
+      box-shadow: 0 18px 40px rgba(60, 60, 59, 0.16);
+    }
+    .j-nombre {
+      font-size: 56px;
+      font-weight: 900;
+      color: #3c3c3b;
+    }
+    .j-dados {
+      display: flex;
+      gap: 12px;
+    }
+    .dado {
+      position: relative;
+      width: 66px;
+      height: 66px;
+      border-radius: 22%;
+      background: #ffffff;
+      box-shadow: 0 6px 14px rgba(60, 60, 59, 0.16);
+    }
+    .cara {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      padding: 14%;
+      opacity: 0;
+    }
+    .cara i { display: block; border-radius: 50%; margin: 14%; }
+    .cara i.on { background: #3c3c3b; }
+  </style>
+  <div id="root" data-composition-id="jugadores" data-width="1920" data-height="1080">
+    <div id="j-t1" class="j-titulo clip" data-start="0" data-duration="2">4 amigos</div>
+    <div id="j-t2" class="j-titulo clip" data-start="2" data-duration="2">4 dados · <b>1 tiro</b> por día</div>
+    <div id="j-fila">
+      <div class="j-jugador" id="j-p1">
+        <div class="j-avatar" style="background:#ea2a58;color:#ffffff">T</div>
+        <div class="j-nombre">Tano</div>
+        <div class="j-dados" id="j-d1"><div class="dado" data-v="2"></div><div class="dado" data-v="5"></div><div class="dado" data-v="1"></div><div class="dado" data-v="3"></div></div>
+      </div>
+      <div class="j-jugador" id="j-p2">
+        <div class="j-avatar" style="background:#00cccc;color:#3c3c3b">R</div>
+        <div class="j-nombre">Rulo</div>
+        <div class="j-dados" id="j-d2"><div class="dado" data-v="6"></div><div class="dado" data-v="3"></div><div class="dado" data-v="3"></div><div class="dado" data-v="5"></div></div>
+      </div>
+      <div class="j-jugador" id="j-p3">
+        <div class="j-avatar" style="background:#cc66ff;color:#ffffff">M</div>
+        <div class="j-nombre">Mica</div>
+        <div class="j-dados" id="j-d3"><div class="dado" data-v="4"></div><div class="dado" data-v="2"></div><div class="dado" data-v="6"></div><div class="dado" data-v="1"></div></div>
+      </div>
+      <div class="j-jugador" id="j-p4">
+        <div class="j-avatar" style="background:#ffcc00;color:#3c3c3b">J</div>
+        <div class="j-nombre">Juli</div>
+        <div class="j-dados" id="j-d4"><div class="dado" data-v="1"></div><div class="dado" data-v="4"></div><div class="dado" data-v="2"></div><div class="dado" data-v="6"></div></div>
+      </div>
+    </div>
+  </div>
+  <script>
+    const PIPS = { 1: [4], 2: [0, 8], 3: [0, 4, 8], 4: [0, 2, 6, 8], 5: [0, 2, 4, 6, 8], 6: [0, 2, 3, 5, 6, 8] };
+    document.querySelectorAll("#j-fila .dado").forEach((d) => {
+      const n = Number(d.dataset.v);
+      let h = "";
+      for (let i = 0; i < 9; i++) h += PIPS[n].includes(i) ? '<i class="on"></i>' : "<i></i>";
+      d.innerHTML = '<div class="cara" style="opacity:1">' + h + "</div>";
+    });
+
+    const tl = gsap.timeline({ paused: true });
+    tl.fromTo("#j-t1", { scale: 1.15 }, { scale: 1, duration: 0.27, ease: "back.out(2.2)" }, 0);
+    // Un jugador por tiempo: cae desde arriba con rebote
+    for (let i = 1; i <= 4; i++) {
+      const t = (i - 1) * 0.5;
+      tl.fromTo(`#j-p${i} .j-avatar`, { y: -620, rotation: i % 2 ? -12 : 12 }, { y: 0, rotation: 0, duration: 0.33, ease: "back.out(1.6)" }, t);
+      tl.fromTo(`#j-p${i} .j-nombre`, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.25, ease: "power4.out" }, t + 0.15);
+      tl.fromTo(`#j-d${i} .dado`, { opacity: 0, y: -60, rotation: -40 }, { opacity: 1, y: 0, rotation: 0, duration: 0.3, ease: "back.out(2.2)", stagger: 0.05 }, 2 + (i - 1) * 0.12);
+    }
+    tl.fromTo("#j-t2", { scale: 1.15 }, { scale: 1, duration: 0.27, ease: "back.out(2.2)" }, 2);
+    window.__timelines["jugadores"] = tl;
+  </script>
+</template>

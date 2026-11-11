@@ -1,0 +1,7 @@
+# Renders (MP4) y artefactos de HyperFrames: no van al repo
+renders/
+.hyperframes/
+.thumbnails/
+# Descargas originales de música y efectos (las versiones usadas están en assets/audio)
+.media/
+node_modules/

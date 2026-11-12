@@ -3,6 +3,7 @@ import "../styles/global.css";
 import Navbar from "../components/Navbar.astro";
 import Footer from "../components/Footer.astro";
 import VerdictFab from "../components/VerdictFab.astro";
+import TrailerModal from "../components/TrailerModal.astro";
 import { ClientRouter } from 'astro:transitions';
 ---
 
@@ -33,6 +34,8 @@ import { ClientRouter } from 'astro:transitions';
 		<Footer />
 
 		{Astro.locals.user?.role === 'admin' && <VerdictFab />}
+
+		{Astro.locals.user && !Astro.locals.user.trailer_visto && <TrailerModal />}
 
 		<script define:vars={{ user: Astro.locals.user }}>
 			console.log("Logged in user:", user);

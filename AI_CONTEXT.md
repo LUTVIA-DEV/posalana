@@ -50,6 +50,9 @@ Si sos un agente de Inteligencia Artificial (AI) leyendo este repositorio, este 
 - **Ordenamiento Interactivo:** La "Tabla Global del Año" permite ordenamiento en cliente al hacer clic en sus cabeceras, actualizando iconos de FontAwesome (`fa-sort`, `fa-sort-up`, `fa-sort-down`) en tiempo real.
 - **Formato de Fechas:** Toda fecha visible se muestra como día, mes y año (`DD/MM/YYYY`) con `formatDate` de `src/utils/date.ts`. En la base, las URLs (`?week=`) y las comparaciones internas se siguen usando `YYYY-MM-DD`.
 - **Página 404:** `src/pages/404.astro` muestra un "tiro inválido" 4 · 👻 · 4 (el dado del medio es un fantasma) con botón para volver al inicio y un "Tirar de nuevo" que solo re-anima los dados (cliente, sin requests).
+- **Trailer del juego:** El video de 44 s (`public/trailer/posalana-trailer.mp4`, con póster `public/trailer/poster.jpg`; la fuente de HyperFrames vive en la rama `feat/trailer`) se muestra con `TrailerVideo.astro` en la página de Reglas y en el pop-up `TrailerModal.astro`. El video lleva `preload="none"` y nunca arranca solo.
+  - **Pop-up de bienvenida:** Lo monta `Layout.astro` cuando el usuario tiene `trailer_visto = 0`. La columna `user.trailer_visto` cuenta por cuenta, no por navegador: la migración la crea con `DEFAULT 1` (las cuentas que ya existían no lo ven) y `/api/register` inserta las cuentas nuevas con `0`. Al cerrarlo (Esc, cruz, «¡A jugar!», «Ver las reglas» o clic afuera) se llama a `/api/user/trailer-visto`, que lo pasa a `1`.
+  - **Accesibilidad:** `role="dialog"` con `aria-modal`, el foco queda adentro (Tab da la vuelta) y vuelve al cerrar; Esc se escucha en captura para que funcione aunque el foco esté en los controles del video.
 - **Responsividad:** Mobile-first obligatorio. En móviles, los dados detallados (`DiceDisplay`) se ocultan inteligentemente en el timeline para mantener el ancho.
 
 ## 4. Modo Administrador

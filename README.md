@@ -24,6 +24,7 @@ La forma definitiva, justa y basada puramente en el azar para dividir las tareas
 *   **Gestión Rápida de Avatares:** El administrador puede cambiar o eliminar las fotos de perfil de todos los usuarios directamente haciendo clic sobre su avatar en el padrón, comprimiendo la imagen en el navegador antes de subirla.
 *   **🔄 Actualización en Tiempo Real:** El ranking de la página de inicio se actualiza automáticamente cada 8 segundos sin necesidad de refrescar la página. Utiliza la *Page Visibility API* para pausar automáticamente las consultas al servidor si el usuario cambia de pestaña, minimizando las consultas a la base.
 *   **👾 Notificaciones de Discord:** Integración automática mediante Webhooks de Discord que notifica al instante cada tirada de dados realizada. El veredicto oficial sale automáticamente al cierre de la tirada y, además, el administrador tiene una burbuja flotante visible en todas las páginas para publicarlo o reenviarlo a mano de tareas del día (que incluye la cantidad de jugadores que tiraron).
+*   **🎬 Trailer del Juego:** Un video de 44 segundos explica cómo se juega. Está en la página de Reglas y le aparece en un pop-up a cada cuenta nueva la primera vez que entra (se guarda por cuenta en la base, así no vuelve a salir). No se descarga hasta que alguien le da play.
 
 ## 🛠️ Tecnologías Utilizadas
 

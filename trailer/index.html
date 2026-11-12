@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/gsap.min.js"></script>
+    <style>
+      /* Paleta de lutvia-ds (src/styles/lutvia/lutvia.css): no se agregan colores */
+      :root {
+        --rosa: #ea2a58;
+        --cyan: #00cccc;
+        --amarillo: #ffcc00;
+        --violeta: #cc66ff;
+        --gris: #ededed;
+        --oscuro: #3c3c3b;
+        --blanco: #ffffff;
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: var(--gris);
+        font-family: "Montserrat", sans-serif;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="44" data-width="1920" data-height="1080">
+      <div id="hook" data-composition-id="hook" data-composition-src="compositions/hook.html" data-start="0" data-duration="4" data-track-index="1" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
+      <div id="jugadores" data-composition-id="jugadores" data-composition-src="compositions/jugadores.html" data-start="4" data-duration="4" data-track-index="1" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
+      <div id="horario" data-composition-id="horario" data-composition-src="compositions/horario.html" data-start="8" data-duration="4" data-track-index="1" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
+      <div id="tirada" data-composition-id="tirada" data-composition-src="compositions/tirada.html" data-start="12" data-duration="5" data-track-index="1" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
+      <div id="reparto" data-composition-id="reparto" data-composition-src="compositions/reparto.html" data-start="17" data-duration="8" data-track-index="1" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
+      <div id="lomito" data-composition-id="lomito" data-composition-src="compositions/lomito.html" data-start="25" data-duration="5.5" data-track-index="1" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
+      <div id="temporada" data-composition-id="temporada" data-composition-src="compositions/temporada.html" data-start="30.5" data-duration="4.5" data-track-index="1" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
+      <div id="veredicto" data-composition-id="veredicto" data-composition-src="compositions/veredicto.html" data-start="35" data-duration="4.5" data-track-index="1" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
+      <div id="cierre" data-composition-id="cierre" data-composition-src="compositions/cierre.html" data-start="39.5" data-duration="4.5" data-track-index="1" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
+
+      <!-- Música: funk-pop de 120 bpm del catálogo de HeyGen, estirado a 44 s (ver README) -->
+      <audio id="musica" class="clip" src="assets/audio/musica.m4a" data-start="0" data-duration="44" data-track-index="2" data-volume="0.8" data-fade-out="1.5"></audio>
+
+      <!-- Efectos: cada uno arranca para que su pico caiga un frame después de la imagen -->
+      <audio id="sfx-whoosh-marca" class="clip" src="assets/audio/whoosh.mp3" data-start="1.95" data-duration="0.6" data-track-index="3" data-volume="0.7"></audio>
+      <audio id="sfx-dados-caen" class="clip" src="assets/audio/dados.mp3" data-start="5.95" data-duration="0.8" data-track-index="3" data-volume="0.6" data-fade-out="0.2"></audio>
+      <audio id="sfx-dados-ruedan" class="clip" src="assets/audio/dados.mp3" data-start="11.95" data-duration="2.5" data-track-index="3" data-volume="1"></audio>
+      <audio id="sfx-pop-la" class="clip" src="assets/audio/pop.mp3" data-start="17.43" data-duration="0.5" data-track-index="4" data-volume="0.8"></audio>
+      <audio id="sfx-whoosh-sa" class="clip" src="assets/audio/whoosh.mp3" data-start="18.94" data-duration="0.6" data-track-index="3" data-volume="0.6"></audio>
+      <audio id="sfx-pop-sa" class="clip" src="assets/audio/pop.mp3" data-start="19.43" data-duration="0.5" data-track-index="4" data-volume="0.7"></audio>
+      <audio id="sfx-whoosh-po" class="clip" src="assets/audio/whoosh.mp3" data-start="20.94" data-duration="0.6" data-track-index="3" data-volume="0.5"></audio>
+      <audio id="sfx-pop-po" class="clip" src="assets/audio/pop.mp3" data-start="21.43" data-duration="0.5" data-track-index="4" data-volume="0.8"></audio>
+      <audio id="sfx-whoosh-na" class="clip" src="assets/audio/whoosh.mp3" data-start="22.94" data-duration="0.6" data-track-index="3" data-volume="0.6"></audio>
+      <audio id="sfx-pop-na" class="clip" src="assets/audio/pop.mp3" data-start="23.43" data-duration="0.5" data-track-index="4" data-volume="0.7"></audio>
+      <audio id="sfx-golpe-lomito" class="clip" src="assets/audio/golpe.mp3" data-start="27.46" data-duration="2.1" data-track-index="4" data-volume="1"></audio>
+      <audio id="sfx-pop-exencion" class="clip" src="assets/audio/pop.mp3" data-start="32.68" data-duration="0.5" data-track-index="4" data-volume="0.8"></audio>
+      <audio id="sfx-pop-url" class="clip" src="assets/audio/pop.mp3" data-start="41.95" data-duration="0.5" data-track-index="4" data-volume="0.8"></audio>
+    </div>
+    <script>
+      window.__timelines["main"] = gsap.timeline({ paused: true });
+    </script>
+  </body>
+</html>

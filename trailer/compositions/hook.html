@@ -1,0 +1,91 @@
+<template>
+  <style>
+    #root {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      font-family: "Montserrat", sans-serif;
+      background: #ededed;
+    }
+    .h-campo {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .h-campo span {
+      font-size: 560px;
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      line-height: 1;
+      color: #ffffff;
+    }
+    #h-po { background: #ea2a58; z-index: 4; }
+    #h-sa { background: #00cccc; z-index: 3; }
+    #h-sa span { color: #3c3c3b; }
+    #h-la { background: #cc66ff; z-index: 2; }
+    #h-na { background: #3c3c3b; z-index: 1; }
+    #h-na span { color: #ededed; }
+    #h-marca {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 36px;
+      z-index: 0;
+    }
+    #h-wordmark {
+      display: flex;
+      font-size: 300px;
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      line-height: 1;
+    }
+    #h-wordmark span { display: inline-block; }
+    #h-w-po { color: #ea2a58; }
+    #h-w-sa { color: #00cccc; }
+    #h-w-la { color: #cc66ff; }
+    #h-w-na { color: #3c3c3b; }
+    #h-bajada {
+      font-size: 56px;
+      font-weight: 700;
+      color: #3c3c3b;
+      letter-spacing: 0.01em;
+    }
+  </style>
+  <div id="root" data-composition-id="hook" data-width="1920" data-height="1080">
+    <div id="h-marca" class="clip" data-start="0" data-duration="4">
+      <div id="h-wordmark">
+        <span id="h-w-po">PO</span><span id="h-w-sa">SA</span><span id="h-w-la">LA</span><span id="h-w-na">NA</span>
+      </div>
+      <div id="h-bajada">Pone · Saca · Lava · Nada</div>
+    </div>
+    <div id="h-na" class="h-campo clip" data-layout-allow-overlap data-start="0" data-duration="2"><span id="h-na-t">NA</span></div>
+    <div id="h-la" class="h-campo clip" data-layout-allow-overlap data-start="0" data-duration="1.5"><span id="h-la-t">LA</span></div>
+    <div id="h-sa" class="h-campo clip" data-layout-allow-overlap data-start="0" data-duration="1"><span id="h-sa-t">SA</span></div>
+    <div id="h-po" class="h-campo clip" data-layout-allow-overlap data-start="0" data-duration="0.5"><span id="h-po-t">PO</span></div>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    // Una sílaba por tiempo (0,5 s), cada una golpea con un rebote corto
+    ["#h-po-t", "#h-sa-t", "#h-la-t", "#h-na-t"].forEach((sel, i) => {
+      tl.fromTo(sel, { scale: 1.18 }, { scale: 1, duration: 0.27, ease: "back.out(2.2)" }, i * 0.5);
+    });
+    // Compás 2: las cuatro sílabas llegan desde los cuatro lados y arman el wordmark
+    const desde = [
+      { x: -900, y: 0 },
+      { x: 0, y: -700 },
+      { x: 0, y: 700 },
+      { x: 900, y: 0 },
+    ];
+    ["#h-w-po", "#h-w-sa", "#h-w-la", "#h-w-na"].forEach((sel, i) => {
+      tl.fromTo(sel, { x: desde[i].x, y: desde[i].y, scale: 1.6 }, { x: 0, y: 0, scale: 1, duration: 0.33, ease: "power4.out" }, 2 + i * 0.06);
+    });
+    tl.fromTo("#h-wordmark", { scale: 1.06 }, { scale: 1, duration: 0.3, ease: "back.out(2.2)" }, 2.4);
+    tl.fromTo("#h-bajada", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.3, ease: "power4.out" }, 2.6);
+    window.__timelines["hook"] = tl;
+  </script>
+</template>

@@ -1,0 +1,94 @@
+<template>
+  <style>
+    #root {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      font-family: "Montserrat", sans-serif;
+      background: #ededed;
+      color: #3c3c3b;
+    }
+    #ve-titulo {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 80px;
+      text-align: center;
+      font-size: 96px;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      line-height: 1;
+    }
+    #ve-titulo b { color: #ea2a58; }
+    #ve-reloj {
+      position: absolute;
+      left: 110px;
+      top: 340px;
+      width: 740px;
+    }
+    #ve-cierra { font-size: 48px; font-weight: 700; margin-bottom: 10px; }
+    #ve-hora {
+      position: relative;
+      height: 210px;
+      font-size: 200px;
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+      overflow: hidden;
+    }
+    .ve-h { position: absolute; left: 0; top: 0; }
+    #ve-h2 { color: #ea2a58; }
+    #ve-msj {
+      position: absolute;
+      left: 900px;
+      top: 270px;
+      width: 900px;
+      background: #ffffff;
+      border-radius: 24px;
+      box-shadow: 0 18px 40px rgba(60, 60, 59, 0.16);
+      padding: 40px 48px;
+      display: flex;
+      gap: 32px;
+    }
+    #ve-avatar { width: 120px; height: 120px; border-radius: 50%; }
+    #ve-cuerpo { flex: 1; }
+    #ve-autor { font-size: 44px; font-weight: 900; display: flex; align-items: center; gap: 16px; }
+    #ve-autor small { font-size: 32px; font-weight: 700; color: rgba(60, 60, 59, 0.75); font-variant-numeric: tabular-nums; }
+    #ve-cab { font-size: 36px; font-weight: 700; margin: 12px 0 18px; color: rgba(60, 60, 59, 0.75); }
+    .ve-linea { font-size: 50px; font-weight: 700; padding: 8px 0; }
+    .ve-linea b { font-weight: 900; }
+  </style>
+  <div id="root" data-composition-id="veredicto" data-width="1920" data-height="1080">
+    <div id="ve-titulo">El veredicto sale <b>solo</b></div>
+    <div id="ve-reloj">
+      <div id="ve-cierra">Cierra la tirada</div>
+      <div id="ve-hora"><div class="ve-h" id="ve-h1">12:29</div><div class="ve-h" id="ve-h2">12:30</div></div>
+    </div>
+    <div id="ve-msj">
+      <img id="ve-avatar" src="assets/bot-avatar.png" alt="" />
+      <div id="ve-cuerpo">
+        <div id="ve-autor">POSALANA <small>hoy a las 12:30</small></div>
+        <div id="ve-cab">En Discord · 4 jugadores tiraron hoy</div>
+        <div class="ve-linea" id="ve-l1">🧽 Lava: <b>Juli</b></div>
+        <div class="ve-linea" id="ve-l2">🗑️ Saca: <b>Tano</b></div>
+        <div class="ve-linea" id="ve-l3">🍽️ Pone: <b>Mica</b></div>
+        <div class="ve-linea" id="ve-l4">🎉 Se salva: <b>Rulo</b></div>
+      </div>
+    </div>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    tl.fromTo("#ve-titulo", { scale: 1.15 }, { scale: 1, duration: 0.27, ease: "back.out(2.2)" }, 0);
+    tl.fromTo("#ve-reloj", { x: -900 }, { x: 0, duration: 0.4, ease: "power4.out" }, 0);
+    // El minuto cambia como un tablero: 12:29 sale por arriba, 12:30 entra por abajo
+    tl.fromTo("#ve-h1", { y: 0 }, { y: -220, duration: 0.25, ease: "power3.in" }, 0.75);
+    tl.fromTo("#ve-h2", { y: 220 }, { y: 0, duration: 0.25, ease: "back.out(1.6)" }, 0.95);
+    // Llega el mensaje del bot
+    tl.fromTo("#ve-msj", { x: 1200 }, { x: 0, duration: 0.4, ease: "power4.out" }, 1.25);
+    for (let i = 1; i <= 4; i++) {
+      tl.fromTo(`#ve-l${i}`, { opacity: 0, x: 40 }, { opacity: 1, x: 0, duration: 0.25, ease: "power4.out" }, 1.75 + (i - 1) * 0.5);
+    }
+    window.__timelines["veredicto"] = tl;
+  </script>
+</template>

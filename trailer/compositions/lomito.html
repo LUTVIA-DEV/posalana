@@ -1,0 +1,182 @@
+<template>
+  <style>
+    #root {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      font-family: "Montserrat", sans-serif;
+      background: #ededed;
+      color: #3c3c3b;
+    }
+    #lo-pregunta {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 110px;
+      text-align: center;
+      font-size: 110px;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      line-height: 1;
+    }
+    .lo-fila {
+      position: absolute;
+      left: 330px;
+      width: 1260px;
+      height: 190px;
+      background: #ffffff;
+      border-radius: 24px;
+      box-shadow: 0 18px 40px rgba(60, 60, 59, 0.16);
+      display: flex;
+      align-items: center;
+      padding: 0 44px;
+      gap: 30px;
+    }
+    #lo-f1 { top: 360px; }
+    #lo-f2 { top: 610px; }
+    .lo-avatar {
+      width: 110px;
+      height: 110px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 56px;
+      font-weight: 900;
+    }
+    .lo-nombre { font-size: 64px; font-weight: 900; flex: 1; }
+    .lo-dados { display: flex; gap: 22px; }
+    .dado {
+      position: relative;
+      width: 122px;
+      height: 122px;
+      border-radius: 22%;
+      background: #ffffff;
+      box-shadow: 0 8px 18px rgba(60, 60, 59, 0.2);
+    }
+    .cara {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      padding: 14%;
+    }
+    .cara i { display: block; border-radius: 50%; margin: 14%; }
+    .cara i.on { background: #3c3c3b; }
+    #lo-fiesta {
+      position: absolute;
+      inset: 0;
+      background: #ffcc00;
+      z-index: 5;
+    }
+    .lo-cae {
+      position: absolute;
+      top: -160px;
+      font-size: 120px;
+      line-height: 1;
+    }
+    #lo-centro {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 26px;
+    }
+    #lo-emoji { font-size: 230px; line-height: 1; }
+    #lo-titulo {
+      font-size: 160px;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      line-height: 1;
+      padding: 18px 54px;
+      background: #ffffff;
+      border-radius: 24px;
+      box-shadow: 0 18px 40px rgba(60, 60, 59, 0.16);
+    }
+    #lo-sub { font-size: 56px; font-weight: 700; }
+    #lo-contador {
+      font-size: 48px;
+      font-weight: 900;
+      background: #3c3c3b;
+      color: #ededed;
+      padding: 16px 40px;
+      border-radius: 999px;
+      font-variant-numeric: tabular-nums;
+    }
+    #lo-num { display: inline-block; min-width: 1.4em; text-align: right; }
+  </style>
+  <div id="root" data-composition-id="lomito" data-width="1920" data-height="1080">
+    <div id="lo-pregunta" class="clip" data-start="0" data-duration="2.5">¿Y si dos sacan lo mismo?</div>
+    <div id="lo-f1" class="lo-fila clip" data-start="0" data-duration="2.5">
+      <div class="lo-avatar" style="background:#ea2a58;color:#ffffff">T</div>
+      <div class="lo-nombre">Tano</div>
+      <div class="lo-dados"><div class="dado" data-v="3"></div><div class="dado" data-v="3"></div><div class="dado" data-v="5"></div><div class="dado" data-v="2"></div></div>
+    </div>
+    <div id="lo-f2" class="lo-fila clip" data-start="0" data-duration="2.5">
+      <div class="lo-avatar" style="background:#ffcc00;color:#3c3c3b">J</div>
+      <div class="lo-nombre">Juli</div>
+      <div class="lo-dados"><div class="dado" data-v="3"></div><div class="dado" data-v="3"></div><div class="dado" data-v="5"></div><div class="dado" data-v="2"></div></div>
+    </div>
+    <div id="lo-fiesta" class="clip" data-start="2.5" data-duration="3">
+      <div id="lo-lluvia" data-layout-allow-overlap></div>
+      <div id="lo-centro">
+        <div id="lo-emoji">🥪</div>
+        <div id="lo-titulo">CLÁUSULA LOMITO</div>
+        <div id="lo-sub">Mismos 4 dados, en el mismo orden</div>
+        <div id="lo-contador">Días sin Lomito: <span id="lo-num">47</span></div>
+      </div>
+    </div>
+  </div>
+  <script>
+    const PIPS = { 1: [4], 2: [0, 8], 3: [0, 4, 8], 4: [0, 2, 6, 8], 5: [0, 2, 4, 6, 8], 6: [0, 2, 3, 5, 6, 8] };
+    document.querySelectorAll("#lo-f1 .dado, #lo-f2 .dado").forEach((d) => {
+      const n = Number(d.dataset.v);
+      let h = "";
+      for (let i = 0; i < 9; i++) h += PIPS[n].includes(i) ? '<i class="on"></i>' : "<i></i>";
+      d.innerHTML = '<div class="cara">' + h + "</div>";
+    });
+    // Lluvia de lomitos y papas, como el easter egg de la app (posiciones sembradas)
+    const lluvia = document.getElementById("lo-lluvia");
+    let s = 17;
+    const azar = () => ((s = (s * 9301 + 49297) % 233280) / 233280);
+    const gotas = [];
+    for (let i = 0; i < 22; i++) {
+      const g = document.createElement("div");
+      g.className = "lo-cae";
+      g.textContent = i % 3 === 2 ? "🍟" : "🥪";
+      g.style.left = Math.round(40 + (i / 22) * 1760 + azar() * 60) + "px";
+      lluvia.appendChild(g);
+      gotas.push({ g, demora: azar() * 1.6, giro: (azar() - 0.5) * 540, dur: 1.2 + azar() * 0.8 });
+    }
+
+    const tl = gsap.timeline({ paused: true });
+    tl.fromTo("#lo-pregunta", { scale: 1.15 }, { scale: 1, duration: 0.27, ease: "back.out(2.2)" }, 0);
+    tl.fromTo("#lo-f1", { x: -1700 }, { x: 0, duration: 0.4, ease: "power4.out" }, 0.4);
+    tl.fromTo("#lo-f2", { x: 1700 }, { x: 0, duration: 0.4, ease: "power4.out" }, 0.9);
+    // Los dados iguales se marcan de a pares, uno por golpe
+    for (let k = 1; k <= 4; k++) {
+      const par = `#lo-f1 .dado:nth-child(${k}), #lo-f2 .dado:nth-child(${k})`;
+      tl.set(par, { backgroundColor: "#cc66ff" }, 1.3 + (k - 1) * 0.15);
+      tl.set(`#lo-f1 .dado:nth-child(${k}) i.on, #lo-f2 .dado:nth-child(${k}) i.on`, { backgroundColor: "#ffffff" }, 1.3 + (k - 1) * 0.15);
+      tl.fromTo(par, { scale: 1.25 }, { scale: 1, duration: 0.2, ease: "back.out(2.2)", immediateRender: false }, 1.3 + (k - 1) * 0.15);
+    }
+    // Chocan
+    tl.to("#lo-f1", { y: 125, duration: 0.2, ease: "power3.in" }, 2.25);
+    tl.to("#lo-f2", { y: -125, duration: 0.2, ease: "power3.in" }, 2.25);
+    // ¡Lomito!
+    tl.fromTo("#lo-emoji", { scale: 0, rotation: -30 }, { scale: 1, rotation: 0, duration: 0.4, ease: "back.out(2.2)" }, 2.5);
+    tl.fromTo("#lo-titulo", { scale: 1.4 }, { scale: 1, duration: 0.3, ease: "back.out(2.2)" }, 2.55);
+    tl.fromTo("#lo-sub", { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.3, ease: "power4.out" }, 3);
+    tl.fromTo("#lo-contador", { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.3, ease: "power4.out" }, 3.5);
+    const num = { v: 47 };
+    tl.fromTo(num, { v: 47 }, { v: 0, duration: 0.5, ease: "power2.in", onUpdate: () => (document.getElementById("lo-num").textContent = Math.round(num.v)) }, 4);
+    tl.fromTo("#lo-contador", { scale: 1.2 }, { scale: 1, duration: 0.27, ease: "back.out(2.2)" }, 4.5);
+    gotas.forEach(({ g, demora, giro, dur }) => {
+      tl.fromTo(g, { y: 0, rotation: 0 }, { y: 1300, rotation: giro, duration: dur, ease: "power1.in" }, 2.5 + demora);
+    });
+    window.__timelines["lomito"] = tl;
+  </script>
+</template>

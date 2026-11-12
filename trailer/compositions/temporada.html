@@ -1,0 +1,110 @@
+<template>
+  <style>
+    #root {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      font-family: "Montserrat", sans-serif;
+      background: #ededed;
+      color: #3c3c3b;
+    }
+    .te-titulo {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 80px;
+      text-align: center;
+      font-size: 104px;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      line-height: 1;
+    }
+    .te-titulo b { color: #cc66ff; }
+    #te-tarjeta {
+      position: absolute;
+      left: 310px;
+      top: 260px;
+      width: 1300px;
+      height: 640px;
+      background: #ffffff;
+      border-radius: 24px;
+      box-shadow: 0 18px 40px rgba(60, 60, 59, 0.16);
+      padding: 40px 50px;
+    }
+    #te-cabecera {
+      font-size: 40px;
+      font-weight: 900;
+      color: rgba(60, 60, 59, 0.6);
+      margin-bottom: 22px;
+      letter-spacing: 0.04em;
+    }
+    .te-fila {
+      position: relative;
+      height: 120px;
+      display: flex;
+      align-items: center;
+      gap: 30px;
+      border-radius: 14px;
+      padding: 0 24px;
+      margin-bottom: 8px;
+    }
+    .te-nombre { width: 170px; font-size: 52px; font-weight: 900; }
+    .te-barra {
+      height: 56px;
+      border-radius: 999px;
+      background: #cc66ff;
+      transform-origin: left center;
+    }
+    .te-num { font-size: 52px; font-weight: 900; color: #cc66ff; font-variant-numeric: tabular-nums; }
+    #te-chip {
+      position: absolute;
+      right: 30px;
+      top: 50%;
+      margin-top: -42px;
+      height: 84px;
+      padding: 0 34px;
+      display: flex;
+      align-items: center;
+      font-size: 40px;
+      font-weight: 900;
+      background: #cc66ff;
+      color: #ffffff;
+      border-radius: 999px;
+    }
+    #te-sub {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 950px;
+      text-align: center;
+      font-size: 46px;
+      font-weight: 700;
+    }
+  </style>
+  <div id="root" data-composition-id="temporada" data-width="1920" data-height="1080">
+    <div id="te-t1" class="te-titulo clip" data-start="0" data-duration="2">Termina la temporada</div>
+    <div id="te-t2" class="te-titulo clip" data-start="2" data-duration="2.5">El que más lavó, <b>descansa</b></div>
+    <div id="te-tarjeta">
+      <div id="te-cabecera">🧽 VECES QUE LAVÓ</div>
+      <div class="te-fila" id="te-f1"><div class="te-nombre">Juli</div><div class="te-barra" id="te-b1" style="width:440px"></div><div class="te-num">9</div><div id="te-chip">🛡️ Exención</div></div>
+      <div class="te-fila" id="te-f2"><div class="te-nombre">Tano</div><div class="te-barra" id="te-b2" style="width:244px"></div><div class="te-num">5</div></div>
+      <div class="te-fila" id="te-f3"><div class="te-nombre">Mica</div><div class="te-barra" id="te-b3" style="width:196px"></div><div class="te-num">4</div></div>
+      <div class="te-fila" id="te-f4"><div class="te-nombre">Rulo</div><div class="te-barra" id="te-b4" style="width:147px"></div><div class="te-num">3</div></div>
+    </div>
+    <div id="te-sub" class="clip" data-start="2.2" data-duration="2.3">Juli no lava la próxima temporada</div>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    tl.fromTo("#te-t1", { scale: 1.15 }, { scale: 1, duration: 0.27, ease: "back.out(2.2)" }, 0);
+    tl.fromTo("#te-tarjeta", { y: 900 }, { y: 0, duration: 0.4, ease: "power4.out" }, 0);
+    for (let i = 1; i <= 4; i++) {
+      tl.fromTo(`#te-b${i}`, { scaleX: 0 }, { scaleX: 1, duration: 0.6, ease: "power3.out" }, 0.4 + (i - 1) * 0.12);
+      tl.fromTo(`#te-f${i} .te-num`, { opacity: 0 }, { opacity: 1, duration: 0.2 }, 0.8 + (i - 1) * 0.12);
+    }
+    tl.fromTo("#te-t2", { scale: 1.15 }, { scale: 1, duration: 0.27, ease: "back.out(2.2)" }, 2);
+    tl.set("#te-f1", { backgroundColor: "rgba(204,102,255,0.15)" }, 2);
+    tl.fromTo("#te-chip", { scale: 0, rotation: -12 }, { scale: 1, rotation: 0, duration: 0.33, ease: "back.out(2.2)" }, 2.25);
+    tl.fromTo("#te-sub", { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.3, ease: "power4.out" }, 2.2);
+    window.__timelines["temporada"] = tl;
+  </script>
+</template>

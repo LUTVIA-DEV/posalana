@@ -46,7 +46,8 @@ export async function POST(context: APIContext): Promise<Response> {
     const avatarUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${username}`;
 
     await db.execute({
-        sql: "INSERT INTO user (id, username, display_name, password_hash, avatar_url) VALUES (?, ?, ?, ?, ?)",
+        // trailer_visto = 0: la primera vez que entra le aparece el pop-up con el trailer
+        sql: "INSERT INTO user (id, username, display_name, password_hash, avatar_url, trailer_visto) VALUES (?, ?, ?, ?, ?, 0)",
         args: [userId, username, display_name, passwordHash, avatarUrl]
     });
 

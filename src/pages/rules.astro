@@ -1,5 +1,6 @@
 ---
 import Layout from "../layouts/Layout.astro";
+import TrailerVideo from "../components/TrailerVideo.astro";
 import db from "../db/index.js";
 import { getRollSchedule } from "../utils/schedule.js";
 
@@ -26,6 +27,16 @@ const schedule = await getRollSchedule(db);
       >
         Última actualización: 13 Oct 2026
       </p>
+    </section>
+
+    <!-- Trailer -->
+    <section class="animate-in fade-in slide-in-from-bottom-4 duration-500 delay-100 ease-out" aria-labelledby="trailer-titulo">
+      <div class="bg-white border border-foreground/10 p-4 sm:p-6 rounded-3xl shadow-lg">
+        <h3 id="trailer-titulo" class="text-2xl font-bold mb-4 flex items-center gap-3 text-balance">
+          <i class="fa-solid fa-circle-play text-primary" aria-hidden="true"></i> El juego en 44 segundos
+        </h3>
+        <TrailerVideo />
+      </div>
     </section>
 
     <!-- The Meaning -->

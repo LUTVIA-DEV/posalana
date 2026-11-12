@@ -18,7 +18,8 @@ export const lucia = new Lucia(adapter, {
 			username: attributes.username,
 			display_name: attributes.display_name,
 			avatar_url: attributes.avatar_url,
-			role: attributes.role
+			role: attributes.role,
+			trailer_visto: attributes.trailer_visto === 1
 		};
 	}
 });
@@ -35,4 +36,5 @@ interface DatabaseUserAttributes {
 	display_name: string;
 	avatar_url: string | null;
 	role: string;
+	trailer_visto: number;
 }

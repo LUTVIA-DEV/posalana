@@ -1,0 +1,22 @@
+---
+// El trailer del juego (hecho con HyperFrames, fuente en la rama feat/trailer).
+// preload="none": no se descarga nada hasta que alguien le da play; solo se ve el póster.
+interface Props {
+    id?: string;
+}
+
+const { id } = Astro.props;
+---
+
+<video
+    id={id}
+    class="w-full aspect-video rounded-bloque bg-foreground shadow-lg"
+    controls
+    playsinline
+    preload="none"
+    poster="/trailer/poster.jpg"
+    aria-label="Trailer de POSALANA: cómo se juega, en 44 segundos"
+>
+    <source src="/trailer/posalana-trailer.mp4" type="video/mp4" />
+    Tu navegador no puede reproducir el video. <a href="/trailer/posalana-trailer.mp4">Descargá el trailer</a>.
+</video>

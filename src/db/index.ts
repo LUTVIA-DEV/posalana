@@ -16,7 +16,8 @@ db.executeMultiple(`
       display_name TEXT NOT NULL,
       password_hash TEXT NOT NULL,
       avatar_url TEXT,
-      role TEXT DEFAULT 'user'
+      role TEXT DEFAULT 'user',
+      trailer_visto INTEGER NOT NULL DEFAULT 1
   );
 
   CREATE TABLE IF NOT EXISTS session (
@@ -92,6 +93,12 @@ db.executeMultiple(`
   try {
       await db.execute("ALTER TABLE user ADD COLUMN display_name TEXT");
       await db.execute("UPDATE user SET display_name = username WHERE display_name IS NULL");
+  } catch (e) {}
+
+  // Pop-up del trailer para cuentas nuevas: las cuentas que ya existen quedan con 1 (no lo ven)
+  // y el registro crea las nuevas con 0, que pasa a 1 cuando lo cierran.
+  try {
+      await db.execute("ALTER TABLE user ADD COLUMN trailer_visto INTEGER NOT NULL DEFAULT 1");
   } catch (e) {}
 
   try {

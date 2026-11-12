@@ -1,0 +1,118 @@
+---
+// Pop-up con el trailer que ve cada cuenta nueva la primera vez que entra.
+// Se monta desde Layout.astro solo si user.trailer_visto es falso; al cerrarlo se guarda
+// en la base (/api/user/trailer-visto), así cuenta por cuenta y no por navegador.
+// Accesible: se cierra con Esc, el foco queda adentro y vuelve a donde estaba al cerrar.
+// El video no arranca solo.
+import TrailerVideo from "./TrailerVideo.astro";
+---
+
+<div
+    id="trailer-modal"
+    class="hidden fixed inset-0 z-[90] items-center justify-center bg-foreground/60 backdrop-blur-sm px-4 py-6"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="trailer-modal-title"
+    aria-describedby="trailer-modal-desc"
+>
+    <div class="relative bg-white border border-foreground/10 rounded-3xl shadow-2xl max-w-3xl w-full max-h-full overflow-y-auto p-5 sm:p-8 animate-in zoom-in-95 fade-in duration-300">
+        <button
+            type="button"
+            data-trailer-close
+            class="absolute top-3 right-3 w-10 h-10 flex items-center justify-center rounded-pildora text-foreground/60 hover:text-foreground hover:bg-foreground/5 transition-colors cursor-pointer"
+            aria-label="Cerrar"
+        >
+            <i class="fa-solid fa-xmark text-lg" aria-hidden="true"></i>
+        </button>
+
+        <p class="text-secondary font-bold tracking-widest uppercase text-[10px] mb-1">Antes de tirar</p>
+        <h3 id="trailer-modal-title" class="text-2xl sm:text-3xl font-black text-foreground tracking-tight text-balance pr-10">
+            Te damos la bienvenida a POSALANA 🎲
+        </h3>
+        <p id="trailer-modal-desc" class="text-foreground/70 mt-2 mb-5 text-pretty">
+            En 44 segundos, cómo se reparten Lava, Saca y Pone.
+        </p>
+
+        <TrailerVideo id="trailer-modal-video" />
+
+        <div class="mt-6 flex flex-col-reverse sm:flex-row gap-3 sm:justify-end">
+            <a
+                href="/rules"
+                data-trailer-close
+                class="text-center font-bold text-sm text-foreground/70 hover:text-foreground py-3 px-5 rounded-chico hover:bg-foreground/5 transition-colors"
+            >
+                Ver las reglas completas
+            </a>
+            <button
+                type="button"
+                data-trailer-close
+                class="bg-secondary text-background font-bold py-3 px-8 rounded-chico hover:opacity-90 transition-opacity cursor-pointer shadow-md shadow-secondary/20"
+            >
+                ¡A jugar!
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const FOCUSABLES = 'a[href], button:not([disabled]), video[controls], [tabindex]:not([tabindex="-1"])';
+
+    function initTrailerModal() {
+        const modal = document.getElementById("trailer-modal");
+        // Si ya lo cerró en esta pestaña, no se reabre aunque el router traiga una página
+        // renderizada antes de que se guardara el flag.
+        if (!modal || (window as any).__trailerVisto) return;
+
+        const video = modal.querySelector<HTMLVideoElement>("video");
+        const previousFocus = document.activeElement as HTMLElement | null;
+
+        const onKey = (e: KeyboardEvent) => {
+            if (e.key === "Escape") {
+                e.preventDefault();
+                close();
+                return;
+            }
+            if (e.key !== "Tab") return;
+            // El foco da la vuelta dentro del pop-up
+            const items = Array.from(modal.querySelectorAll<HTMLElement>(FOCUSABLES));
+            if (items.length === 0) return;
+            const first = items[0];
+            const last = items[items.length - 1];
+            if (e.shiftKey && (document.activeElement === first || !modal.contains(document.activeElement))) {
+                e.preventDefault();
+                last.focus();
+            } else if (!e.shiftKey && document.activeElement === last) {
+                e.preventDefault();
+                first.focus();
+            }
+        };
+
+        const close = () => {
+            (window as any).__trailerVisto = true;
+            video?.pause();
+            modal.classList.add("hidden");
+            modal.classList.remove("flex");
+            document.documentElement.classList.remove("overflow-hidden");
+            document.removeEventListener("keydown", onKey, true);
+            fetch("/api/user/trailer-visto", { method: "POST", keepalive: true }).catch(() => {});
+            // El foco no se queda en un elemento oculto: vuelve a donde estaba o se suelta
+            if (modal.contains(document.activeElement)) (document.activeElement as HTMLElement).blur();
+            if (previousFocus && previousFocus !== document.body) previousFocus.focus();
+        };
+
+        modal.querySelectorAll("[data-trailer-close]").forEach((el) => el.addEventListener("click", close));
+        modal.addEventListener("click", (e) => {
+            if (e.target === modal) close();
+        });
+        // En captura: los controles nativos del video se quedan con Esc si tienen el foco
+        document.addEventListener("keydown", onKey, true);
+
+        modal.classList.remove("hidden");
+        modal.classList.add("flex");
+        document.documentElement.classList.add("overflow-hidden");
+        modal.querySelector<HTMLElement>("button[data-trailer-close]:not([aria-label])")?.focus();
+    }
+
+    // Con el ClientRouter, el pop-up puede llegar en cualquier navegación
+    document.addEventListener("astro:page-load", initTrailerModal);
+</script>

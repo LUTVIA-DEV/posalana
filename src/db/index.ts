@@ -115,21 +115,6 @@ db.executeMultiple(`
   } catch (e) {
       console.error("Failed to upgrade ldoliri to admin:", e);
   }
-
-  try {
-      const testerRes = await db.execute("SELECT id FROM user WHERE username = 'lomitotester'");
-      if (testerRes.rows.length === 0) {
-          const { hash } = await import('bcryptjs');
-          const pass = await hash('lomitotester', 10);
-          await db.execute({
-              sql: "INSERT INTO user (id, username, display_name, password_hash, avatar_url, role) VALUES (?, ?, ?, ?, ?, ?)",
-              args: ['tester-lomito-id', 'lomitotester', 'Lomito', pass, 'https://api.dicebear.com/7.x/avataaars/svg?seed=lomitotester', 'tester']
-          });
-          console.log("Created lomitotester account");
-      }
-  } catch (e) {
-      console.error("Failed to create lomitotester:", e);
-  }
 })();
 
 export default db;

@@ -2,12 +2,7 @@
 
 Lo que quedó abierto después de la mudanza al VPS (19/10/2026). Cuando algo se resuelve, se borra de acá.
 
-## Decisiones
-
-| Qué | Por qué importa | Cómo se resuelve |
-|---|---|---|
-| **Rol de `lomitotester` en producción** | En producción tiene rol `user`, así que no queda exceptuado del horario ni de los días de juego, aunque el panel dice «salvo lomitotester». En una base nueva el código lo crea con rol `tester` | Decidir si debe ser `tester`. Si sí: `UPDATE user SET role = 'tester' WHERE username = 'lomitotester'` en la base del VPS |
-| **Contraseña de `lomitotester`** | `src/db/index.ts` crea la cuenta con la contraseña `lomitotester`, y el repo es público. Si la cuenta de producción tiene esa contraseña, cualquiera puede entrar como Lomito | Cambiarle la contraseña en producción desde `/reset`, y sacar la contraseña fija del código (por ejemplo, leerla de una variable de entorno) |
+Por ahora no hay decisiones pendientes.
 
 ## Para tener en cuenta
 

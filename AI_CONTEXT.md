@@ -13,7 +13,7 @@ Si sos un agente de Inteligencia Artificial (AI) leyendo este repositorio, este 
 - **Cláusula Lomito:** Si dos usuarios sacan **exactamente los mismos 4 dados en el mismo orden**, se activa la "Cláusula Lomito". 
   - La UI debe mostrar el emoji de sanguche (`🥪`) en el Navbar y un banner festivo en el Index y en el Historial.
   - El contador de "Días sin Lomito" se reinicia.
-  - El usuario especial `lomitotester` sirve exclusivamente para probar esta cláusula duplicando la tirada del administrador.
+  - El usuario especial `lomitotester` sirve exclusivamente para probar esta cláusula duplicando la tirada del administrador. `src/db/index.ts` lo crea con rol `tester` solo si está definida la variable `LOMITOTESTER_PASSWORD` (sin ella no se crea). Su contraseña no va en el código porque el repo es público; si la cuenta ya existe, la variable no la cambia.
   - **Easter egg (no documentado en el README a propósito):** 7 clicks en menos de 3 segundos sobre el badge "días sin lomito" del Navbar (`[data-lomito-badge]`, desktop y mobile) desatan una lluvia de 🥪/🍟 a pantalla completa (Web Animations API, respeta `prefers-reduced-motion`).
 - **Exenciones (Exemptions):** Quien tenga la mayor cantidad de puntos en una tarea en la temporada `S-1`, queda exento de ella durante toda la temporada `S`.
   - **Cálculo Automático:** Se resuelven dinámicamente comparando los puntajes de la temporada anterior. Si hay empates, todos los empatados se eximen.

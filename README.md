@@ -82,6 +82,7 @@ POSALANA corre en el VPS del foro de Lutvia, con [Coolify](https://coolify.io/),
   - `SITE_URL`: `https://posalana.lutvia.com`, para los enlaces y el avatar del bot en Discord.
   - `DISCORD_WEBHOOK_URL`: el webhook del canal de Discord.
   - `CRON_SECRET`: un texto secreto que protege `/api/cron/verdict`.
+  - `LOMITOTESTER_PASSWORD` (opcional): contraseña con la que se crea la cuenta de prueba `lomitotester` en una base nueva. Sin ella no se crea. Si la cuenta ya existe, no la cambia.
   - `DATABASE_URL` ya viene en el `Dockerfile` (`file:/data/posalana.db`).
 - **Veredicto automático:** sale solo a la hora del cierre: el servidor lo revisa cada minuto. Una tarea programada de Coolify llama además a `/api/cron/verdict` a las 16:00 UTC (13:00 de Argentina), como respaldo.
 - **Pendientes de la mudanza y del proyecto:** en [`docs/pendientes.md`](docs/pendientes.md).

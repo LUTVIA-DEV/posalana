@@ -116,11 +116,15 @@ db.executeMultiple(`
       console.error("Failed to upgrade ldoliri to admin:", e);
   }
 
+  // Cuenta de prueba lomitotester: solo se crea si está definida LOMITOTESTER_PASSWORD.
+  // El repo es público, así que la contraseña no puede vivir en el código. Si la cuenta
+  // ya existe, no se toca (la contraseña se cambia desde /reset).
   try {
+      const testerPassword = process.env.LOMITOTESTER_PASSWORD;
       const testerRes = await db.execute("SELECT id FROM user WHERE username = 'lomitotester'");
-      if (testerRes.rows.length === 0) {
+      if (testerRes.rows.length === 0 && testerPassword) {
           const { hash } = await import('bcryptjs');
-          const pass = await hash('lomitotester', 10);
+          const pass = await hash(testerPassword, 10);
           await db.execute({
               sql: "INSERT INTO user (id, username, display_name, password_hash, avatar_url, role) VALUES (?, ?, ?, ?, ?, ?)",
               args: ['tester-lomito-id', 'lomitotester', 'Lomito', pass, 'https://api.dicebear.com/7.x/avataaars/svg?seed=lomitotester', 'tester']

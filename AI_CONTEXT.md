@@ -23,7 +23,7 @@ Si sos un agente de Inteligencia Artificial (AI) leyendo este repositorio, este 
 ## 2. Arquitectura y Tecnologías
 - **Frontend/Backend:** Astro con SSR activado. NO es un sitio estático puro.
 - **Hosting (desde el 19/10/2026):** VPS del foro de Lutvia (Contabo) con Coolify, en `https://posalana.lutvia.com`. Astro corre con `@astrojs/node` en modo standalone, desde el `Dockerfile` (contenedor en UTC). El proyecto de Coolify es **POSALANA** (app `cll3jybiz9exp4891rowd0r7`), separado del foro. La dirección anterior redirige (308) al dominio nuevo.
-- **Base de Datos:** SQLite en un archivo (`DATABASE_URL=file:/data/posalana.db`), en el volumen de Docker `cll3jybiz9exp4891rowd0r7-posalana-data`, en modo WAL y con índice por `roll(date)`. Se accede con `@libsql/client`. Antes estaba en Turso; `scripts/exportar-turso.mjs` es el que hizo la copia.
+- **Base de Datos:** SQLite en un archivo (`DATABASE_URL=file:/data/posalana.db`), en el volumen de Docker `cll3jybiz9exp4891rowd0r7-posalana-data`, en modo WAL y con índice por `roll(date)`. Se accede con `@libsql/client`. Hasta el 19/10/2026 estaba en Turso; `scripts/exportar-turso.mjs` es el que hizo la copia y quedó solo como referencia histórica, porque Turso y el proyecto de Vercel se dieron de baja el 18/11/2026.
 - **Autenticación:** Sistema propio basado en cookies en Astro, contraseñas hasheadas con `bcryptjs`.
 - **Estilos:** Tailwind CSS (versión v4).
 - **Componentes Compartidos:**

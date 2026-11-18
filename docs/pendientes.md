@@ -2,12 +2,7 @@
 
 Lo que quedó abierto después de la mudanza al VPS (19/10/2026). Cuando algo se resuelve, se borra de acá.
 
-## Decisiones
-
-| Qué | Por qué importa | Cómo se resuelve |
-|---|---|---|
-| **Rol de `lomitotester` en producción** | En producción tiene rol `user`, así que no queda exceptuado del horario ni de los días de juego, aunque el panel dice «salvo lomitotester». En una base nueva el código lo crea con rol `tester` | Decidir si debe ser `tester`. Si sí: `UPDATE user SET role = 'tester' WHERE username = 'lomitotester'` en la base del VPS |
-| **Contraseña de `lomitotester`** | La cuenta de producción entra con la contraseña pública `lomitotester` (comprobado el 18/11/2026). El código ya no la tiene fija: usa `LOMITOTESTER_PASSWORD`, pero eso no cambia una cuenta que ya existe | Cambiarle la contraseña en producción, con una que Leandro guarde fuera del repo |
+Por ahora no hay decisiones pendientes.
 
 ## Para tener en cuenta
 

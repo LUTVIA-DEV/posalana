@@ -29,10 +29,10 @@ const sizeClasses = {
 };
 
 const culoTextClasses = {
-    sm: "text-[10px]",
-    md: "text-xs",
-    lg: "text-xs",
-    xl: "text-sm"
+    sm: "text-xs",
+    md: "text-sm",
+    lg: "text-sm",
+    xl: "text-base sm:text-lg"
 };
 
 const safeClass = color || (isSafe === undefined ? "text-secondary" : (isSafe ? "text-secondary" : "text-primary"));
@@ -40,11 +40,11 @@ const safeClass = color || (isSafe === undefined ? "text-secondary" : (isSafe ? 
 
 <div class={showRaw ? "flex flex-col items-center gap-1" : "contents"}>
 {showRaw && (
-    <p class={`inline-flex items-center gap-1 font-bold tabular-nums text-foreground/60 whitespace-nowrap ${culoTextClasses[size]}`} title={`Va de culo: tiro real ${rawText}`}>
-        <span aria-hidden="true">🍑</span>
+    <p class={`inline-flex items-center gap-1 text-foreground/40 whitespace-nowrap ${culoTextClasses[size]}`} title="Fue de culo: arriba el tiro real, abajo el que cuenta">
         <span class="sr-only">Va de culo. Tiro real: {raw!.join(", ")}. Tiro definitivo: {finalText}.</span>
-        <span aria-hidden="true">{rawText}</span>
-        <i class="fa-solid fa-arrow-right text-[0.8em]" aria-hidden="true"></i>
+        <span aria-hidden="true">🍑</span>
+        {raw!.map(v => <i class={getDieClass(v)} aria-hidden="true"></i>)}
+        <i class="fa-solid fa-arrow-down text-[0.75em] ml-0.5" aria-hidden="true"></i>
     </p>
 )}
 <div class={`flex items-center justify-center ${sizeClasses[size]}`} aria-hidden={showRaw ? "true" : undefined}>

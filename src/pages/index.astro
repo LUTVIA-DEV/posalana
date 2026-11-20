@@ -227,11 +227,14 @@ const savedPlayers = sortedRolls.filter(r => rollChoreMap.get(r.id)?.code === 'N
                             <div class="absolute inset-0 bg-gradient-to-r from-transparent via-background/20 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
                         </button>
                         <!-- «Va de culo» 🍑: se canta antes de tirar; el servidor da vuelta los dados (7 − x) -->
-                        <label for="va-de-culo" class="inline-flex items-center gap-2 cursor-pointer select-none bg-accent/5 border border-accent/20 hover:border-accent/45 has-[:checked]:bg-accent/15 has-[:checked]:border-accent/60 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-accent has-[:focus-visible]:ring-offset-2 px-4 py-2 rounded-pildora text-sm font-bold text-foreground transition-colors">
-                            <input type="checkbox" id="va-de-culo" name="va_de_culo" value="1" aria-describedby="va-de-culo-ayuda" class="w-4 h-4 accent-accent cursor-pointer focus:outline-none" />
-                            <span>Va de culo <span aria-hidden="true">🍑</span></span>
+                        <label for="va-de-culo" class="inline-flex items-center gap-3 cursor-pointer select-none bg-white border-2 border-foreground/10 hover:border-accent/40 has-[:checked]:border-accent has-[:checked]:bg-accent/10 has-[:checked]:shadow-[0_6px_20px_rgba(204,102,255,0.25)] has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-accent has-[:focus-visible]:ring-offset-2 pl-2 pr-5 py-2 rounded-pildora shadow-sm transition-all duration-300">
+                            <input type="checkbox" role="switch" id="va-de-culo" name="va_de_culo" value="1" aria-describedby="va-de-culo-ayuda" class="peer sr-only" />
+                            <!-- Interruptor -->
+                            <span aria-hidden="true" class="relative w-12 h-7 shrink-0 rounded-pildora bg-foreground/15 peer-checked:bg-accent transition-colors duration-300 after:content-[''] after:absolute after:top-1 after:left-1 after:w-5 after:h-5 after:rounded-pildora after:bg-white after:shadow after:transition-transform after:duration-300 peer-checked:after:translate-x-5"></span>
+                            <span class="text-base font-black text-foreground/70 peer-checked:text-accent transition-colors tracking-tight">Va de culo</span>
+                            <span aria-hidden="true" class="text-2xl inline-block transition-transform duration-500 peer-checked:rotate-180">🍑</span>
                         </label>
-                        <p id="va-de-culo-ayuda" class="text-xs text-foreground/60 max-w-xs text-pretty -mt-2">Cantala antes de tirar: cada dado se lee por la cara de abajo (el 1 es 6, el 2 es 5…).</p>
+                        <p id="va-de-culo-ayuda" class="text-xs text-foreground/60 max-w-xs text-pretty -mt-1">Cantala antes de tirar: cada dado se lee por la cara de abajo.</p>
                     </form>
                     </>
                     ) : windowStatus === 'no-play' ? (

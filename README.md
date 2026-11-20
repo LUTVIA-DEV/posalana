@@ -15,6 +15,7 @@ La forma definitiva, justa y basada puramente en el azar para dividir las tareas
 *   **Tirada Diaria Única y con Horario:** Se juega martes, miércoles y jueves (el admin puede habilitar una tirada especial otro día). Cada usuario solo puede tirar los dados una vez por día y solo dentro del horario oficial (por defecto de **10:00 a 12:30**, configurable desde el panel admin). El sistema bloquea intentos múltiples y fuera de hora.
 *   **⏰ Veredicto Automático:** Al cierre de la tirada (12:30) el veredicto final se publica solo en Discord, sin que nadie tenga que apretar nada. Los días en que nadie tiró no se manda ningún mensaje.
 *   **Ranking Automático:** Calcula matemáticamente quién saca el número más bajo y asigna automáticamente la peor tarea (Lava), la intermedia (Saca) y la más leve (Pone).
+*   **🍑 Va de culo:** Como en la generala, antes de tirar podés cantar «Va de culo» y cada dado se lee por la cara de abajo (`7 − x`: el 1 es 6, el 2 es 5…). Lo valida el servidor, así que no vale cantarla después de ver el tiro. Para tareas, Lomito y estadísticas cuenta el tiro dado vuelta, y en la app y en Discord se ven los dos (`1 · 3 · 4 · 6 → 6 · 4 · 3 · 1 🍑`). Las probabilidades no cambian: es puro folclore.
 *   **🥪 Cláusula Lomito:** Si dos personas sacan **exactamente los mismos dados en el mismo orden** en el mismo día, se activa el cartel festivo de *Lomito* y el contador de "Días sin Lomito" se reinicia a cero.
 *   **Historial con Paginación Semanal:** Muestra las tiradas agrupadas por semana calendario (lunes a domingo) con navegación interactiva fluida (client-side) que previene recargas completas, mantiene el scroll y actualiza la URL y el historial del navegador automáticamente.
 *   **Estadísticas y Ordenamiento Interactivo:** Muestra las estadísticas de la temporada actual, anterior y global del año usando el componente `StatsTable`. La tabla del año permite ordenar filas interactivamente por cualquier columna (Jugador, PO, SA, LA, Total).
@@ -88,7 +89,7 @@ POSALANA corre en el VPS del foro de Lutvia, con [Coolify](https://coolify.io/),
 
 ## 📜 Reglas del Juego
 
-Las reglas oficiales de POSALANA están publicadas dentro de la misma aplicación, actualizadas por última vez el **13 de Octubre de 2026**. Podés consultarlas en la pestaña "Reglas" en el menú principal de navegación.
+Las reglas oficiales de POSALANA están publicadas dentro de la misma aplicación, actualizadas por última vez el **20 de Noviembre de 2026** (llegó «va de culo» 🍑). Podés consultarlas en la pestaña "Reglas" en el menú principal de navegación.
 
 ---
 *Hecho con ❤️ y algo de suerte en los dados.*

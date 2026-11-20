@@ -5,6 +5,7 @@ import UserAvatar from '../components/UserAvatar.astro';
 import DiceDisplay from '../components/DiceDisplay.astro';
 import StatsTable from '../components/StatsTable.astro';
 import { formatDate } from '../utils/date.js';
+import { normalizeRoll, type NormalizedRoll } from '../utils/dice.js';
 
 if (!Astro.locals.user) {
 	return Astro.redirect('/login');
@@ -15,12 +16,13 @@ const allRollsRes = await db.execute(`
     SELECT r.*, u.username, u.display_name, u.avatar_url 
     FROM roll r
     JOIN user u ON r.user_id = u.id
-    ORDER BY r.date DESC, r.die1 ASC, r.die2 ASC, r.die3 ASC, r.die4 ASC
+    ORDER BY r.date DESC
 `);
 
 // Group by date
-const groupedRolls: Record<string, typeof allRollsRes.rows> = {};
-for (const row of allRollsRes.rows) {
+// Tiro definitivo (con «va de culo» ya aplicado); el orden del día lo da assignDailyChores
+const groupedRolls: Record<string, NormalizedRoll[]> = {};
+for (const row of allRollsRes.rows.map(normalizeRoll)) {
     const date = row.date as string;
     if (!groupedRolls[date]) {
         groupedRolls[date] = [];
@@ -387,8 +389,14 @@ const currentSeasonExemptions = await getExemptionsForSeason(db, currentSeasonId
 
                                                         {/* Stats */}
                                                         <div class="flex items-center gap-4">
+                                                            {roll.va_de_culo && (
+                                                                <span class="sm:hidden text-xs font-bold tabular-nums text-foreground/60 whitespace-nowrap" title={`Va de culo: tiro real ${roll.raw_dice.join(" · ")}`}>
+                                                                    <span aria-hidden="true">🍑</span>
+                                                                    <span class="sr-only">Fue de culo: tiro real {roll.raw_dice.join(", ")}, definitivo {[roll.die1, roll.die2, roll.die3, roll.die4].join(", ")}.</span>
+                                                                </span>
+                                                            )}
                                                             <div class="hidden sm:flex items-center opacity-70 group-hover:opacity-100 transition-opacity">
-                                                                <DiceDisplay die1={roll.die1 as number} die2={roll.die2 as number} die3={roll.die3 as number} die4={roll.die4 as number} size="sm" isSafe={isSafe} />
+                                                                <DiceDisplay die1={roll.die1 as number} die2={roll.die2 as number} die3={roll.die3 as number} die4={roll.die4 as number} raw={roll.raw_dice} vaDeCulo={roll.va_de_culo} size="sm" isSafe={isSafe} />
                                                             </div>
                                                             <div class={`px-3 py-1 rounded-chico text-xs font-black tracking-widest ${isSafe ? 'bg-secondary text-background' : 'bg-primary text-background shadow-[0_0_10px_rgba(234,42,88,0.3)]'}`}>
                                                                 {chore.code}

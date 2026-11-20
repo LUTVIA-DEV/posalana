@@ -1,4 +1,5 @@
 import { colorLutviaEntero } from "./tokens.js";
+import { finalDice, formatDiceText, type Dice } from "./dice.js";
 
 // Dirección pública del sitio, para los enlaces y el avatar del bot en Discord
 const SITE_URL = (process.env.SITE_URL || "https://posalana.lutvia.com").replace(/\/$/, "");
@@ -6,7 +7,8 @@ const BOT_AVATAR_URL = `${SITE_URL}/bot-avatar.png`;
 
 export async function sendDiscordRoll(
     displayName: string,
-    dice: number[],
+    rawDice: Dice,
+    vaDeCulo: boolean,
     lomitoActivated: boolean,
     lomitoPlayers: string[]
 ) {
@@ -16,7 +18,10 @@ export async function sendDiscordRoll(
         return;
     }
 
-    const diceStr = dice.join(" - ");
+    // Con «va de culo» se ven el tiro real y el definitivo; los comentarios usan el definitivo
+    const dice = finalDice(rawDice, vaDeCulo);
+    const diceStr = formatDiceText(rawDice, vaDeCulo);
+    const culoLine = vaDeCulo ? `🍑 *¡${displayName} la cantó: fue de culo! Los dados se leen dados vuelta.*\n` : "";
     let content = "";
     let embeds: any[] = [];
 
@@ -25,7 +30,7 @@ export async function sendDiscordRoll(
         content = "🥪🔥 @here **¡CLÁUSULA LOMITO ACTIVADA!** 🔥🥪";
         embeds = [{
             title: "🥪 ¡Se rompió la matrix de la suerte! 🥪",
-            description: `¡La profecía se ha cumplido! **${lomitoPlayers.join(" y ")}** han sacado exactamente la misma tirada:\n👉 **${diceStr}**\n\n¡Hoy se festeja almorzando unos **LOMITOS CON PAPAS** patrocinados por **LUTVIA**! 🍟🤤🥪`,
+            description: `¡La profecía se ha cumplido! **${lomitoPlayers.join(" y ")}** han sacado exactamente la misma tirada:\n👉 **${dice.join(" - ")}**\n${culoLine ? `${culoLine}(${diceStr})\n` : ""}\n¡Hoy se festeja almorzando unos **LOMITOS CON PAPAS** patrocinados por **LUTVIA**! 🍟🤤🥪`,
             color: colorLutviaEntero("violeta"),
             footer: {
                 text: "POSALANA • Cláusula Lomito 🥪"
@@ -55,7 +60,7 @@ export async function sendDiscordRoll(
         // Standard notification
         embeds = [{
             title: "🎲 ¡El destino en juego! Nueva tirada",
-            description: `**${displayName}** arrojó los dados de la suerte y obtuvo:\n👉 **${diceStr}**\n\n${commentary}\n\n🔗 ¿Y vos? ¿Zafás o lavás? Medí tu suerte en la [App de POSALANA](${SITE_URL}/)`,
+            description: `**${displayName}** arrojó los dados de la suerte y obtuvo:\n👉 **${diceStr}**\n\n${culoLine}${commentary}\n\n🔗 ¿Y vos? ¿Zafás o lavás? Medí tu suerte en la [App de POSALANA](${SITE_URL}/)`,
             color: colorLutviaEntero("cyan"),
             footer: {
                 text: "POSALANA • Suerte del Día 🎲"

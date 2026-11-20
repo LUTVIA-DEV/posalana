@@ -7,9 +7,15 @@ export interface Props {
     isSafe?: boolean;
     size?: "sm" | "md" | "lg" | "xl";
     color?: string;
+    /** «Va de culo» 🍑: los dados de arriba son el tiro definitivo y `raw` el tiro real */
+    vaDeCulo?: boolean;
+    raw?: number[];
 }
 
-const { die1, die2, die3, die4, isSafe, size = "md", color } = Astro.props;
+const { die1, die2, die3, die4, isSafe, size = "md", color, vaDeCulo = false, raw } = Astro.props;
+const showRaw = vaDeCulo && Array.isArray(raw) && raw.length === 4;
+const rawText = showRaw ? raw!.join(" · ") : "";
+const finalText = [die1, die2, die3, die4].join(", ");
 
 const diceWords = ['one', 'two', 'three', 'four', 'five', 'six'];
 
@@ -22,12 +28,29 @@ const sizeClasses = {
     xl: "text-3xl sm:text-4xl md:text-5xl lg:text-6xl gap-3 sm:gap-4 lg:gap-6"
 };
 
+const culoTextClasses = {
+    sm: "text-[10px]",
+    md: "text-xs",
+    lg: "text-xs",
+    xl: "text-sm"
+};
+
 const safeClass = color || (isSafe === undefined ? "text-secondary" : (isSafe ? "text-secondary" : "text-primary"));
 ---
 
-<div class={`flex items-center justify-center ${sizeClasses[size]}`}>
+<div class={showRaw ? "flex flex-col items-center gap-1" : "contents"}>
+{showRaw && (
+    <p class={`inline-flex items-center gap-1 font-bold tabular-nums text-foreground/60 whitespace-nowrap ${culoTextClasses[size]}`} title={`Va de culo: tiro real ${rawText}`}>
+        <span aria-hidden="true">🍑</span>
+        <span class="sr-only">Va de culo. Tiro real: {raw!.join(", ")}. Tiro definitivo: {finalText}.</span>
+        <span aria-hidden="true">{rawText}</span>
+        <i class="fa-solid fa-arrow-right text-[0.8em]" aria-hidden="true"></i>
+    </p>
+)}
+<div class={`flex items-center justify-center ${sizeClasses[size]}`} aria-hidden={showRaw ? "true" : undefined}>
     <i class={`${getDieClass(die1)} ${safeClass} drop-shadow-sm animate-in fade-in zoom-in-95 duration-300 hover:scale-110 hover:rotate-6 transition-all duration-300 cursor-default`}></i>
     <i class={`${getDieClass(die2)} text-foreground/30 animate-in fade-in zoom-in-95 duration-300 delay-75 hover:scale-110 hover:-rotate-6 transition-all duration-300 cursor-default`}></i>
     <i class={`${getDieClass(die3)} text-foreground/30 animate-in fade-in zoom-in-95 duration-300 delay-150 hover:scale-110 hover:rotate-6 transition-all duration-300 cursor-default`}></i>
     <i class={`${getDieClass(die4)} text-foreground/30 animate-in fade-in zoom-in-95 duration-300 delay-200 hover:scale-110 hover:-rotate-6 transition-all duration-300 cursor-default`}></i>
+</div>
 </div>

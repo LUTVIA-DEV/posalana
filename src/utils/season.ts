@@ -1,4 +1,5 @@
 import { assignDailyChores } from './chores.js';
+import { normalizeRoll } from './dice.js';
 
 export function getSeasonId(dateStr: string): string {
     // Try to extract only the YYYY-MM-DD part to avoid timezone shifts
@@ -191,7 +192,9 @@ export async function calculateSeasonPoints(db: any, seasonId: string) {
 async function calculateSeasonPointsInternal(db: any, seasonId: string): Promise<any[]> {
     // 1. Get all rolls that belong to the season
     const rollsRes = await db.execute("SELECT r.*, u.username, u.display_name, u.avatar_url FROM roll r JOIN user u ON r.user_id = u.id");
-    const allRolls = rollsRes.rows.filter((r: any) => getSeasonId(r.date as string) === seasonId);
+    const allRolls = rollsRes.rows
+        .filter((r: any) => getSeasonId(r.date as string) === seasonId)
+        .map(normalizeRoll); // las estadísticas cuentan el tiro definitivo («va de culo»)
 
     // 2. Get manual points for this season
     const manualPointsRes = await db.execute({

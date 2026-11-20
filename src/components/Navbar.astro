@@ -2,6 +2,7 @@
 import db from "../db/index.js";
 import UserAvatar from "./UserAvatar.astro";
 import { formatDate } from "../utils/date.js";
+import { FINAL_DICE_SQL } from "../utils/dice.js";
 
 const { user } = Astro.locals;
 
@@ -13,7 +14,7 @@ const todayStr = today.toISOString().split('T')[0];
 const lastLomitoRes = await db.execute(`
 	SELECT date
 	FROM roll
-	GROUP BY date, die1, die2, die3, die4
+	GROUP BY date, ${FINAL_DICE_SQL}
 	HAVING COUNT(*) > 1
 	ORDER BY date DESC
 	LIMIT 1

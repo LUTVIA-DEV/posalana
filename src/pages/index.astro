@@ -6,6 +6,7 @@ import UserAvatar from '../components/UserAvatar.astro';
 import DiceDisplay from '../components/DiceDisplay.astro';
 import ScheduleNotice from '../components/ScheduleNotice.astro';
 import { formatDate } from '../utils/date.js';
+import { normalizeRoll } from '../utils/dice.js';
 import { getArgentinaNow, getNextPlayDay, getRollSchedule, getRollWindowStatus, SCHEDULE_NOTICE_UNTIL } from '../utils/schedule.js';
 
 if (!Astro.locals.user) {
@@ -29,7 +30,7 @@ const userRollRes = await db.execute({
     args: [user.id, dateStr]
 });
 const hasRolled = userRollRes.rows.length > 0;
-const myRoll = hasRolled ? userRollRes.rows[0] : null;
+const myRoll = hasRolled ? normalizeRoll(userRollRes.rows[0]) : null;
 
 // Get all rolls for today, ordered by rules
 const allRollsRes = await db.execute({
@@ -38,11 +39,11 @@ const allRollsRes = await db.execute({
         FROM roll r
         JOIN user u ON r.user_id = u.id
         WHERE r.date = ?
-        ORDER BY r.die1 ASC, r.die2 ASC, r.die3 ASC, r.die4 ASC
     `,
     args: [dateStr]
 });
-const allRolls = allRollsRes.rows;
+// Tiro definitivo (con «va de culo» ya aplicado); el orden lo da assignDailyChores
+const allRolls = allRollsRes.rows.map(normalizeRoll);
 
 const chores = [
     { label: "Lava los platos", code: "LA", emoji: "🧽" },
@@ -93,7 +94,7 @@ const savedPlayers = sortedRolls.filter(r => rollChoreMap.get(r.id)?.code === 'N
 
                             <!-- Dice Roll -->
                             <div class="mt-2 flex justify-center">
-                                <DiceDisplay die1={assignedPO.die1 as number} die2={assignedPO.die2 as number} die3={assignedPO.die3 as number} die4={assignedPO.die4 as number} size="sm" color="text-primary" />
+                                <DiceDisplay die1={assignedPO.die1 as number} die2={assignedPO.die2 as number} die3={assignedPO.die3 as number} die4={assignedPO.die4 as number} raw={assignedPO.raw_dice} vaDeCulo={assignedPO.va_de_culo} size="sm" color="text-primary" />
                             </div>
 
                             <span class="font-black text-foreground text-xs sm:text-sm mt-2 block text-center leading-tight px-1">{assignedPO.display_name}</span>
@@ -122,7 +123,7 @@ const savedPlayers = sortedRolls.filter(r => rollChoreMap.get(r.id)?.code === 'N
                             
                             <!-- Dice Roll -->
                             <div class="mt-2 flex justify-center">
-                                <DiceDisplay die1={assignedSA.die1 as number} die2={assignedSA.die2 as number} die3={assignedSA.die3 as number} die4={assignedSA.die4 as number} size="sm" color="text-secondary" />
+                                <DiceDisplay die1={assignedSA.die1 as number} die2={assignedSA.die2 as number} die3={assignedSA.die3 as number} die4={assignedSA.die4 as number} raw={assignedSA.raw_dice} vaDeCulo={assignedSA.va_de_culo} size="sm" color="text-secondary" />
                             </div>
 
                             <span class="font-black text-foreground text-xs sm:text-sm mt-2 block text-center leading-tight px-1">{assignedSA.display_name}</span>
@@ -151,7 +152,7 @@ const savedPlayers = sortedRolls.filter(r => rollChoreMap.get(r.id)?.code === 'N
 
                             <!-- Dice Roll -->
                             <div class="mt-2 flex justify-center">
-                                <DiceDisplay die1={assignedLA.die1 as number} die2={assignedLA.die2 as number} die3={assignedLA.die3 as number} die4={assignedLA.die4 as number} size="sm" color="text-accent" />
+                                <DiceDisplay die1={assignedLA.die1 as number} die2={assignedLA.die2 as number} die3={assignedLA.die3 as number} die4={assignedLA.die4 as number} raw={assignedLA.raw_dice} vaDeCulo={assignedLA.va_de_culo} size="sm" color="text-accent" />
                             </div>
 
                             <span class="font-black text-foreground text-xs sm:text-sm mt-2 block text-center leading-tight px-1">{assignedLA.display_name}</span>
@@ -197,7 +198,7 @@ const savedPlayers = sortedRolls.filter(r => rollChoreMap.get(r.id)?.code === 'N
                 </div>
                 <div class="flex items-center gap-3 bg-secondary/5 border border-secondary/20 px-4 py-2 rounded-chico shadow-inner">
                     <p class="text-xs text-secondary font-bold uppercase tracking-wider mr-2 hidden md:block">Tu Suerte:</p>
-                    <DiceDisplay die1={myRoll.die1 as number} die2={myRoll.die2 as number} die3={myRoll.die3 as number} die4={myRoll.die4 as number} size="lg" />
+                    <DiceDisplay die1={myRoll.die1 as number} die2={myRoll.die2 as number} die3={myRoll.die3 as number} die4={myRoll.die4 as number} raw={myRoll.raw_dice} vaDeCulo={myRoll.va_de_culo} size="lg" />
                 </div>
             </section>
         ) : (
@@ -216,7 +217,7 @@ const savedPlayers = sortedRolls.filter(r => rollChoreMap.get(r.id)?.code === 'N
                         <i class="fa-regular fa-clock"></i> La tirada cierra a las {schedule.end}
                     </p>
 
-                    <form method="post" action="/api/roll" id="roll-form">
+                    <form method="post" action="/api/roll" id="roll-form" class="flex flex-col items-center gap-4">
                         <button type="submit" id="roll-button" class="relative overflow-hidden bg-secondary text-background px-10 py-5 rounded-pildora text-xl font-bold shadow-[0_8px_30px_rgba(0,204,204,0.3)] hover:shadow-[0_8px_40px_rgba(0,204,204,0.5)] hover:-translate-y-1 active:translate-y-0 active:shadow-[0_4px_15px_rgba(0,204,204,0.3)] transition-all duration-300 cursor-pointer group">
                             <span class="relative z-10 flex items-center justify-center gap-3" id="roll-button-content">
                                 <i class="fa-solid fa-dice text-2xl group-hover:rotate-180 transition-transform duration-500" id="roll-icon"></i>
@@ -225,6 +226,12 @@ const savedPlayers = sortedRolls.filter(r => rollChoreMap.get(r.id)?.code === 'N
                             <!-- Hover gradient overlay -->
                             <div class="absolute inset-0 bg-gradient-to-r from-transparent via-background/20 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
                         </button>
+                        <!-- «Va de culo» 🍑: se canta antes de tirar; el servidor da vuelta los dados (7 − x) -->
+                        <label for="va-de-culo" class="inline-flex items-center gap-2 cursor-pointer select-none bg-accent/5 border border-accent/20 hover:border-accent/45 has-[:checked]:bg-accent/15 has-[:checked]:border-accent/60 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-accent has-[:focus-visible]:ring-offset-2 px-4 py-2 rounded-pildora text-sm font-bold text-foreground transition-colors">
+                            <input type="checkbox" id="va-de-culo" name="va_de_culo" value="1" aria-describedby="va-de-culo-ayuda" class="w-4 h-4 accent-accent cursor-pointer focus:outline-none" />
+                            <span>Va de culo <span aria-hidden="true">🍑</span></span>
+                        </label>
+                        <p id="va-de-culo-ayuda" class="text-xs text-foreground/60 max-w-xs text-pretty -mt-2">Cantala antes de tirar: cada dado se lee por la cara de abajo (el 1 es 6, el 2 es 5…).</p>
                     </form>
                     </>
                     ) : windowStatus === 'no-play' ? (
@@ -385,7 +392,7 @@ const savedPlayers = sortedRolls.filter(r => rollChoreMap.get(r.id)?.code === 'N
                                 </div>
 
                                 <div class="flex items-center justify-center sm:justify-end bg-white/50 sm:bg-transparent p-4 sm:p-0 rounded-chico w-full sm:w-auto mt-2 sm:mt-0">
-                                    <DiceDisplay die1={roll.die1 as number} die2={roll.die2 as number} die3={roll.die3 as number} die4={roll.die4 as number} size="xl" color={config.diceColor} />
+                                    <DiceDisplay die1={roll.die1 as number} die2={roll.die2 as number} die3={roll.die3 as number} die4={roll.die4 as number} raw={roll.raw_dice} vaDeCulo={roll.va_de_culo} size="xl" color={config.diceColor} />
                                 </div>
                             </div>
                         )
@@ -539,8 +546,9 @@ const savedPlayers = sortedRolls.filter(r => rollChoreMap.get(r.id)?.code === 'N
                                 if (overlayStatusText) overlayStatusText.textContent = 'Calculando trayectorias...';
                             }, 500);
                             
+                            const vaDeCulo = document.getElementById('va-de-culo')?.checked;
                             setTimeout(() => {
-                                if (overlayStatusText) overlayStatusText.textContent = 'Escribiendo el destino...';
+                                if (overlayStatusText) overlayStatusText.textContent = vaDeCulo ? 'Dando vuelta los dados... 🍑' : 'Escribiendo el destino...';
                             }, 1000);
 
                             // Submit form after 1.5 seconds

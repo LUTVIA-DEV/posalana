@@ -1,5 +1,6 @@
 import type { Client } from "@libsql/client";
 import { assignDailyChores } from "./chores.js";
+import { formatDiceText, normalizeRoll } from "./dice.js";
 import { sendDiscordVerdict } from "./discord.js";
 import { getSeasonId, getExemptionsForSeason } from "./season.js";
 
@@ -25,7 +26,7 @@ export async function publishDailyVerdict(
         `,
         args: [dateStr]
     });
-    const allRolls = allRollsRes.rows;
+    const allRolls = allRollsRes.rows.map(normalizeRoll); // tiro definitivo («va de culo»)
 
     if (allRolls.length === 0) {
         return { sent: false, playersCount: 0 };
@@ -42,7 +43,9 @@ export async function publishDailyVerdict(
     };
 
     for (const roll of sortedRolls) {
-        const displayName = String(roll.display_name || roll.username);
+        const name = String(roll.display_name || roll.username);
+        // Quien cantó «va de culo» lleva su tiro real y el definitivo en el veredicto
+        const displayName = roll.va_de_culo ? `${name} (${formatDiceText(roll.raw_dice, true, "·")})` : name;
         const chore = rollChoreMap.get(roll.id);
 
         if (chore.code === "LA") {

@@ -6,6 +6,7 @@ import DiceDisplay from "../components/DiceDisplay.astro";
 import { getSeasonId, getPreviousSeasons, formatSeasonName } from "../utils/season.js";
 import { getArgentinaNow, getRollSchedule, getRollWindowStatus } from "../utils/schedule.js";
 import { formatDate } from "../utils/date.js";
+import { normalizeRoll } from "../utils/dice.js";
 
 const { user } = Astro.locals;
 
@@ -28,13 +29,13 @@ const allExemptions = exemptionsRes.rows;
 
 // Fetch all rolls
 const rollsRes = await db.execute(`
-	SELECT r.id, r.date, r.die1, r.die2, r.die3, r.die4, u.username, u.display_name, u.avatar_url 
+	SELECT r.id, r.date, r.die1, r.die2, r.die3, r.die4, r.va_de_culo, u.username, u.display_name, u.avatar_url 
 	FROM roll r 
 	JOIN user u ON r.user_id = u.id 
 	ORDER BY r.date DESC, r.id DESC
 	LIMIT 50
 `);
-const recentRolls = rollsRes.rows;
+const recentRolls = rollsRes.rows.map(normalizeRoll);
 
 // Fetch recent password resets
 const resetsRes = await db.execute(`
@@ -430,7 +431,7 @@ uniqueSeasons.sort((a, b) => {
                                         </div>
                                     </td>
                                     <td class="p-4">
-                                        <DiceDisplay die1={r.die1 as number} die2={r.die2 as number} die3={r.die3 as number} die4={r.die4 as number} size="md" />
+                                        <DiceDisplay die1={r.die1 as number} die2={r.die2 as number} die3={r.die3 as number} die4={r.die4 as number} raw={r.raw_dice} vaDeCulo={r.va_de_culo} size="md" />
                                     </td>
                                     <td class="p-4 text-right">
                                         <form method="post" action="/api/admin/delete-roll" onsubmit={`return confirm('⚠️ ¿Alterar el destino y anular la tirada de ${r.username}?')`}>

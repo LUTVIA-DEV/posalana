@@ -1,6 +1,6 @@
 import type { APIContext } from "astro";
 import db from "../../db/index.js";
-import { assignDailyChores } from "../../utils/chores.js";
+import { finalDice, normalizeRoll, type Dice } from "../../utils/dice.js";
 import { sendDiscordRoll } from "../../utils/discord.js";
 import { getArgentinaNow, getNextPlayDay, getRollSchedule, getRollWindowStatus } from "../../utils/schedule.js";
 
@@ -46,6 +46,15 @@ export async function POST(context: APIContext): Promise<Response> {
         return new Response("Ya tiraste los dados hoy", { status: 400 });
     }
 
+    // «Va de culo» 🍑: se canta antes de tirar (viene en el pedido) y el servidor da vuelta los dados.
+    let vaDeCulo = false;
+    try {
+        const form = await context.request.formData();
+        vaDeCulo = form.get("va_de_culo") === "1";
+    } catch {
+        // Pedido sin formulario: tirada normal
+    }
+
     let d1 = rollDie();
     let d2 = rollDie();
     let d3 = rollDie();
@@ -56,7 +65,7 @@ export async function POST(context: APIContext): Promise<Response> {
         // Fetch admin's roll for today
         const adminRollRes = await db.execute({
             sql: `
-                SELECT r.die1, r.die2, r.die3, r.die4 
+                SELECT r.die1, r.die2, r.die3, r.die4, r.va_de_culo
                 FROM roll r 
                 JOIN user u ON r.user_id = u.id 
                 WHERE u.role = 'admin' AND r.date = ? 
@@ -65,39 +74,42 @@ export async function POST(context: APIContext): Promise<Response> {
             args: [dateStr]
         });
         if (adminRollRes.rows.length > 0) {
-            d1 = adminRollRes.rows[0].die1 as number;
-            d2 = adminRollRes.rows[0].die2 as number;
-            d3 = adminRollRes.rows[0].die3 as number;
-            d4 = adminRollRes.rows[0].die4 as number;
+            // Copia el tiro definitivo del admin; si el tester canta «va de culo», guarda el real que da lo mismo
+            const admin = normalizeRoll(adminRollRes.rows[0]);
+            [d1, d2, d3, d4] = finalDice([admin.die1, admin.die2, admin.die3, admin.die4], vaDeCulo);
         } else {
             return new Response("El admin debe tirar primero para poder testear la cláusula lomito.", { status: 400 });
         }
     }
 
     await db.execute({
-        sql: "INSERT INTO roll (id, user_id, date, time, die1, die2, die3, die4) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-        args: [id, userId, dateStr, timeStr, d1, d2, d3, d4]
+        sql: "INSERT INTO roll (id, user_id, date, time, die1, die2, die3, die4, va_de_culo) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        args: [id, userId, dateStr, timeStr, d1, d2, d3, d4, vaDeCulo ? 1 : 0]
     });
+
+    // Dados reales (los que se guardaron) y tiro definitivo, que es el que cuenta
+    const rawDice: Dice = [d1, d2, d3, d4];
+    const [f1, f2, f3, f4] = finalDice(rawDice, vaDeCulo);
 
     // Fetch all rolls of today to check if this roll triggered the Cláusula Lomito
     const allRollsRes = await db.execute({
         sql: `
-            SELECT r.id, r.user_id, r.die1, r.die2, r.die3, r.die4, u.display_name, u.username, u.avatar_url 
+            SELECT r.id, r.user_id, r.die1, r.die2, r.die3, r.die4, r.va_de_culo, u.display_name, u.username, u.avatar_url 
             FROM roll r 
             JOIN user u ON r.user_id = u.id 
             WHERE r.date = ?
         `,
         args: [dateStr]
     });
-    const allRolls = allRollsRes.rows;
+    const allRolls = allRollsRes.rows.map(normalizeRoll);
 
     // Check if the current roll specifically triggered the Lomito Clause (i.e. matches another roll from today in the exact same order)
     const currentRollMatchesOther = allRolls.some((r: any) => 
         String(r.user_id) !== String(userId) &&
-        Number(r.die1) === d1 &&
-        Number(r.die2) === d2 &&
-        Number(r.die3) === d3 &&
-        Number(r.die4) === d4
+        r.die1 === f1 &&
+        r.die2 === f2 &&
+        r.die3 === f3 &&
+        r.die4 === f4
     );
 
     let discordLomitoActivated = false;
@@ -105,10 +117,10 @@ export async function POST(context: APIContext): Promise<Response> {
     if (currentRollMatchesOther) {
         discordLomitoActivated = true;
         const matchingRolls = allRolls.filter((r: any) => 
-            Number(r.die1) === d1 &&
-            Number(r.die2) === d2 &&
-            Number(r.die3) === d3 &&
-            Number(r.die4) === d4
+            r.die1 === f1 &&
+            r.die2 === f2 &&
+            r.die3 === f3 &&
+            r.die4 === f4
         );
         for (const r of matchingRolls) {
             const name = r.display_name || r.username || "Usuario";
@@ -120,7 +132,7 @@ export async function POST(context: APIContext): Promise<Response> {
 
     // Send Discord notification asynchronously (don't block the redirect)
     const displayName = context.locals.user?.display_name || context.locals.user?.username || "Usuario";
-    sendDiscordRoll(displayName, [d1, d2, d3, d4], discordLomitoActivated, discordLomitoPlayers).catch(err => {
+    sendDiscordRoll(displayName, rawDice, vaDeCulo, discordLomitoActivated, discordLomitoPlayers).catch(err => {
         console.error("Error trigger sending Discord roll:", err);
     });
 

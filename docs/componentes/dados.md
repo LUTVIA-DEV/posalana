@@ -11,9 +11,10 @@ Los cuatro dados de una tirada, en fila. El primero es **el que decide** la tare
 | `die1` … `die4` | Valores de 1 a 6 (`fa-dice-one` … `fa-dice-six` de Font Awesome) |
 | `size` | `sm`, `md`, `lg` o `xl` (de `text-sm` a `text-6xl`) |
 | `isSafe` | Color del dado que decide: `secondary` (cyan) si te salvás, `primary` (rosa) si te toca tarea |
+| `vaDeCulo`, `raw` | «Va de culo» 🍑: los dados grandes son el definitivo y abajo se agrega una línea chica con una flecha hacia arriba, 🍑 y el tiro real en dados (gris al 40 %, nunca en números). Lleva texto para lectores de pantalla con los dos tiros. Con `vaDeCulo` sin `raw` (el podio) se ve solo el definitivo con 🍑 al lado |
 | `color` | Pisa el color del dado que decide (la portada pasa el de la tarea: PO rosa, SA cyan, LA violeta, NA gris al 30 %) |
 
-Sin `isSafe` ni `color`, el dado que decide va en cyan.
+Sin `isSafe` ni `color`, el dado que decide va en cyan. Los valores `die1`…`die4` son siempre el tiro **definitivo**: pasale la fila normalizada con `normalizeRoll` (`src/utils/dice.ts`) y `raw={roll.raw_dice} vaDeCulo={roll.va_de_culo}`.
 
 ## Movimiento
 

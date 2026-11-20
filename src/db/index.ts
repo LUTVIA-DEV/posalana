@@ -35,6 +35,7 @@ db.executeMultiple(`
       die2 INTEGER NOT NULL,
       die3 INTEGER NOT NULL,
       die4 INTEGER NOT NULL,
+      va_de_culo INTEGER NOT NULL DEFAULT 0,
       FOREIGN KEY (user_id) REFERENCES user(id),
       UNIQUE(user_id, date)
   );
@@ -107,6 +108,11 @@ db.executeMultiple(`
       // Column probably already exists, ignore
   }
   
+  // «Va de culo» 🍑: se guardan los dados reales y este flag; el tiro definitivo se recalcula.
+  try {
+      await db.execute("ALTER TABLE roll ADD COLUMN va_de_culo INTEGER NOT NULL DEFAULT 0");
+  } catch (e) {}
+
   try {
       await db.execute({
           sql: "UPDATE user SET role = 'admin' WHERE username = ?",

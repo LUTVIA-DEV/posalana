@@ -227,33 +227,28 @@ const savedPlayers = sortedRolls.filter(r => rollChoreMap.get(r.id)?.code === 'N
                             <div class="absolute inset-0 bg-gradient-to-r from-transparent via-background/20 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
                         </button>
                         <!-- «Va de culo» 🍑: se canta antes de tirar; el servidor da vuelta los dados (7 − x) -->
-                        <div class="flex items-center gap-2">
+                        <!-- Al pasarle el mouse o llegar con Tab, un tooltip explica la regla (Esc lo cierra) -->
+                        <div class="relative group/ayuda">
                         <label for="va-de-culo" class="inline-flex items-center gap-3 cursor-pointer select-none bg-white border-2 border-foreground/10 hover:border-accent/40 has-[:checked]:border-accent has-[:checked]:bg-accent/10 has-[:checked]:shadow-[0_6px_20px_rgba(204,102,255,0.25)] has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-accent has-[:focus-visible]:ring-offset-2 pl-2 pr-5 py-2 rounded-pildora shadow-sm transition-all duration-300">
-                            <input type="checkbox" role="switch" id="va-de-culo" name="va_de_culo" value="1" aria-describedby="va-de-culo-ayuda" class="peer sr-only" />
+                            <input type="checkbox" role="switch" id="va-de-culo" name="va_de_culo" onkeydown="if (event.key === 'Escape') this.blur()" value="1" aria-describedby="va-de-culo-ayuda" class="peer sr-only" />
                             <!-- Interruptor -->
                             <span aria-hidden="true" class="relative w-12 h-7 shrink-0 rounded-pildora bg-foreground/15 peer-checked:bg-accent transition-colors duration-300 after:content-[''] after:absolute after:top-1 after:left-1 after:w-5 after:h-5 after:rounded-pildora after:bg-white after:shadow after:transition-transform after:duration-300 peer-checked:after:translate-x-5"></span>
                             <span class="text-base font-black text-foreground/70 peer-checked:text-accent transition-colors tracking-tight">Va de culo</span>
                             <span aria-hidden="true" class="text-2xl inline-block transition-transform duration-500 peer-checked:rotate-180">🍑</span>
                         </label>
-                        <!-- Tooltip «¿Qué es?»: se abre al pasar el mouse, con el foco (Tab) o tocándolo en el celu -->
-                        <div class="relative group/ayuda">
-                            <button type="button" onkeydown="if (event.key === 'Escape') this.blur()" aria-label="¿Qué es «va de culo»?" aria-describedby="va-de-culo-ayuda" class="w-9 h-9 rounded-pildora border-2 border-foreground/10 bg-white text-foreground/60 hover:text-accent hover:border-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 transition-colors cursor-help">
-                                <i class="fa-solid fa-question" aria-hidden="true"></i>
-                            </button>
-                            <div id="va-de-culo-ayuda" role="tooltip" class="invisible opacity-0 group-hover/ayuda:visible group-hover/ayuda:opacity-100 group-focus-within/ayuda:visible group-focus-within/ayuda:opacity-100 transition-opacity duration-200 absolute z-20 bottom-full right-0 sm:right-auto sm:left-1/2 sm:-translate-x-1/2 mb-3 w-64 bg-white border border-accent/30 rounded-bloque shadow-xl p-4 text-left">
-                                <p class="text-sm font-black text-accent mb-1">Va de culo <span aria-hidden="true">🍑</span></p>
-                                <p class="text-xs text-foreground/80 leading-relaxed text-pretty mb-3">Como en la generala: si la cantás <strong>antes de tirar</strong>, cada dado se lee por la cara de abajo. Cuenta el tiro dado vuelta para todo.</p>
-                                <p class="flex items-center justify-center gap-2 text-xl bg-accent/5 rounded-chico py-2" aria-hidden="true">
-                                    <i class="fa-solid fa-dice-one text-foreground/40"></i>
-                                    <i class="fa-solid fa-arrow-right text-xs text-accent"></i>
-                                    <i class="fa-solid fa-dice-six text-accent"></i>
-                                    <span class="w-3"></span>
-                                    <i class="fa-solid fa-dice-two text-foreground/40"></i>
-                                    <i class="fa-solid fa-arrow-right text-xs text-accent"></i>
-                                    <i class="fa-solid fa-dice-five text-accent"></i>
-                                </p>
-                                <p class="text-[11px] text-foreground/60 mt-3 text-pretty">¿Da más suerte? Ni un poquito. Es pura cábala.</p>
-                            </div>
+                        <div id="va-de-culo-ayuda" role="tooltip" class="invisible opacity-0 group-hover/ayuda:visible group-hover/ayuda:opacity-100 group-has-[:focus-visible]/ayuda:visible group-has-[:focus-visible]/ayuda:opacity-100 transition-opacity duration-200 absolute z-20 bottom-full left-1/2 -translate-x-1/2 mb-3 w-64 bg-white border border-accent/30 rounded-bloque shadow-xl p-4 text-left">
+                            <p class="text-sm font-black text-accent mb-1">Va de culo <span aria-hidden="true">🍑</span></p>
+                            <p class="text-xs text-foreground/80 leading-relaxed text-pretty mb-3">Como en la generala: si la cantás <strong>antes de tirar</strong>, cada dado se lee por la cara de abajo. Cuenta el tiro dado vuelta para todo.</p>
+                            <p class="flex items-center justify-center gap-2 text-xl bg-accent/5 rounded-chico py-2" aria-hidden="true">
+                                <i class="fa-solid fa-dice-one text-foreground/40"></i>
+                                <i class="fa-solid fa-arrow-right text-xs text-accent"></i>
+                                <i class="fa-solid fa-dice-six text-accent"></i>
+                                <span class="w-3"></span>
+                                <i class="fa-solid fa-dice-two text-foreground/40"></i>
+                                <i class="fa-solid fa-arrow-right text-xs text-accent"></i>
+                                <i class="fa-solid fa-dice-five text-accent"></i>
+                            </p>
+                            <p class="text-[11px] text-foreground/60 mt-3 text-pretty">¿Da más suerte? Ni un poquito. Es pura cábala.</p>
                         </div>
                         </div>
                     </form>

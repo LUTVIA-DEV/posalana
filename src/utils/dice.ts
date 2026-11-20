@@ -40,8 +40,11 @@ export const FINAL_DICE_SQL = [1, 2, 3, 4]
     .map(n => `CASE WHEN va_de_culo = 1 THEN 7 - die${n} ELSE die${n} END`)
     .join(", ");
 
-/** Texto del tiro para Discord: «1 - 3 - 4 - 6» o «🍑 1 - 3 - 4 - 6 → 6 - 4 - 3 - 1». */
+/**
+ * Texto del tiro en una sola línea (veredicto de Discord), primero el definitivo y después el real:
+ * «1 - 3 - 4 - 6» o «6 - 4 - 3 - 1 — 🍑 real: 1 - 3 - 4 - 6».
+ */
 export function formatDiceText(raw: Dice, vaDeCulo: boolean, sep = " - "): string {
     const real = raw.join(sep);
-    return vaDeCulo ? `🍑 ${real} → ${finalDice(raw, true).join(sep)}` : real;
+    return vaDeCulo ? `${finalDice(raw, true).join(sep)} — 🍑 real: ${real}` : real;
 }

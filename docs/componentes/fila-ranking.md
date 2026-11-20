@@ -15,7 +15,7 @@ Una tirada del día en el ranking de la portada: quién tiró, a qué hora, qué
   - Exención: violeta al 10 % con texto violeta, 9 px, ícono `fa-shield-halved`.
 - **Hora** en Montserrat con `tabular-nums`, gris al 40 %, sobre gris al 5 %.
 - **Tarea en texto**: emoji y nombre en el color de la tarea, en negrita («🧽 Lava los platos»).
-- **Dados** `xl`, con el que decide en el color de la tarea (ver [Dados](dados.md)). Si fue de culo, arriba va el tiro real con 🍑.
+- **Dados** `xl`, con el que decide en el color de la tarea (ver [Dados](dados.md)). Si fue de culo, abajo va el tiro real en chico con 🍑.
 
 ## Estados
 

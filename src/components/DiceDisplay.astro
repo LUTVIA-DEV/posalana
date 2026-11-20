@@ -7,7 +7,7 @@ export interface Props {
     isSafe?: boolean;
     size?: "sm" | "md" | "lg" | "xl";
     color?: string;
-    /** «Va de culo» 🍑: los dados de arriba son el tiro definitivo y `raw` el tiro real */
+    /** «Va de culo» 🍑: los dados grandes son el tiro definitivo y `raw`, el tiro real, va abajo en chico */
     vaDeCulo?: boolean;
     raw?: number[];
 }
@@ -39,18 +39,18 @@ const safeClass = color || (isSafe === undefined ? "text-secondary" : (isSafe ? 
 ---
 
 <div class={showRaw ? "flex flex-col items-center gap-1" : "contents"}>
-{showRaw && (
-    <p class={`inline-flex items-center gap-1 text-foreground/40 whitespace-nowrap ${culoTextClasses[size]}`} title="Fue de culo: arriba el tiro real, abajo el que cuenta">
-        <span class="sr-only">Va de culo. Tiro real: {raw!.join(", ")}. Tiro definitivo: {finalText}.</span>
-        <span aria-hidden="true">🍑</span>
-        {raw!.map(v => <i class={getDieClass(v)} aria-hidden="true"></i>)}
-        <i class="fa-solid fa-arrow-down text-[0.75em] ml-0.5" aria-hidden="true"></i>
-    </p>
-)}
 <div class={`flex items-center justify-center ${sizeClasses[size]}`} aria-hidden={showRaw ? "true" : undefined}>
     <i class={`${getDieClass(die1)} ${safeClass} drop-shadow-sm animate-in fade-in zoom-in-95 duration-300 hover:scale-110 hover:rotate-6 transition-all duration-300 cursor-default`}></i>
     <i class={`${getDieClass(die2)} text-foreground/30 animate-in fade-in zoom-in-95 duration-300 delay-75 hover:scale-110 hover:-rotate-6 transition-all duration-300 cursor-default`}></i>
     <i class={`${getDieClass(die3)} text-foreground/30 animate-in fade-in zoom-in-95 duration-300 delay-150 hover:scale-110 hover:rotate-6 transition-all duration-300 cursor-default`}></i>
     <i class={`${getDieClass(die4)} text-foreground/30 animate-in fade-in zoom-in-95 duration-300 delay-200 hover:scale-110 hover:-rotate-6 transition-all duration-300 cursor-default`}></i>
 </div>
+{showRaw && (
+    <p class={`inline-flex items-center gap-1 text-foreground/40 whitespace-nowrap ${culoTextClasses[size]}`} title="Fue de culo: arriba el tiro que cuenta, abajo el tiro real">
+        <span class="sr-only">Va de culo. Tiro definitivo: {finalText}. Tiro real: {raw!.join(", ")}.</span>
+        <i class="fa-solid fa-arrow-up text-[0.75em] mr-0.5" aria-hidden="true"></i>
+        <span aria-hidden="true">🍑</span>
+        {raw!.map(v => <i class={getDieClass(v)} aria-hidden="true"></i>)}
+    </p>
+)}
 </div>

@@ -236,9 +236,9 @@ const savedPlayers = sortedRolls.filter(r => rollChoreMap.get(r.id)?.code === 'N
                             <span aria-hidden="true" class="text-lg inline-block transition-transform duration-500 peer-checked:rotate-180">🍑</span>
                         </label>
                         <!-- Tooltip «¿Qué es?»: se abre al pasar el mouse, con el foco (Tab) o tocándolo en el celu -->
-                        <div class="group/ayuda">
-                            <button type="button" onkeydown="if (event.key === 'Escape') this.blur()" aria-label="¿Qué es «va de culo»?" aria-describedby="va-de-culo-ayuda" class="w-6 h-6 text-[10px] rounded-pildora bg-foreground/5 text-foreground/60 hover:text-accent hover:bg-accent/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 transition-colors cursor-help">
-                                <i class="fa-solid fa-question" aria-hidden="true"></i>
+                        <div class="group/ayuda flex">
+                            <button type="button" onkeydown="if (event.key === 'Escape') this.blur()" aria-label="¿Qué es «va de culo»?" aria-describedby="va-de-culo-ayuda" class="w-6 h-6 flex items-center justify-center leading-none text-[10px] rounded-pildora bg-foreground/5 text-foreground/60 hover:text-accent hover:bg-accent/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 transition-colors cursor-help">
+                                <i class="fa-solid fa-question leading-none" aria-hidden="true"></i>
                             </button>
                             <div id="va-de-culo-ayuda" role="tooltip" class="invisible opacity-0 group-hover/ayuda:visible group-hover/ayuda:opacity-100 group-focus-within/ayuda:visible group-focus-within/ayuda:opacity-100 transition-opacity duration-200 absolute z-20 bottom-full left-1/2 -translate-x-1/2 mb-2 w-52 bg-white border border-accent/30 rounded-chico shadow-lg p-3 text-left">
                                 <p class="text-xs font-black text-accent mb-1">Va de culo <span aria-hidden="true">🍑</span></p>

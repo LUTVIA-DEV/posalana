@@ -3,48 +3,53 @@ Simulación de «se cayeron los dados al piso» 🫣 (ver src/utils/drop.ts).
 
 Chance fija por tirada: en la primera tirada del día de cada jugador hay una chance p
 de que se caigan los dados, la misma para todos e independiente (sin tope por día: se
-pueden caer varios o ninguno).
-p = 1 − (1 − TARGET)^(1/n), con n la mediana de jugadores por día de los últimos 20
-días de juego, acotada a [P_MIN, P_MAX]. Equipo realista: 10 jugadores con asistencia
-del 50 al 95 % que llegan en orden al azar.
+pueden caer varios o ninguno). Por defecto p = 1 − (1 − 0,9)^(1/n), con n el piso de
+asistencia (7 jugadores), así hasta en un día flojo hay ~90 % de chance de al menos una
+caída. Asistencia real del equipo: entre 7 y 11 jugadores por día, que llegan en
+cualquier orden.
 
 Uso: python scripts/simular-dados-al-piso.py
 """
 import random
+from math import comb
 
 random.seed(11)
-ATT = [0.95, 0.92, 0.9, 0.88, 0.85, 0.8, 0.75, 0.7, 0.6, 0.5]
-WINDOW = 20
 TARGET = 0.9
-P_MIN, P_MAX = 0.05, 0.5
+FLOOR = 7
+P = 1 - (1 - TARGET) ** (1 / FLOOR)
 
 
-def median(xs):
-    xs = sorted(xs)
-    return xs[len(xs) // 2] if len(xs) % 2 else (xs[len(xs) // 2 - 1] + xs[len(xs) // 2]) / 2
+def distribution(n, p):
+    """Probabilidad exacta de 0, 1, 2 y 3+ caídas con n tiradas (binomial)."""
+    exact = [comb(n, k) * p**k * (1 - p) ** (n - k) for k in range(3)]
+    return exact + [1 - sum(exact)]
 
 
-def run(days=40000):
-    history, drops = [], 0
-    bypos, cntpos, perday = {}, {}, {}
+def simulate(days=40000):
+    drops = 0
+    perday = [0, 0, 0, 0]
+    bypos, cntpos = {}, {}
     for _ in range(days):
-        n = median(history[-WINDOW:]) if history else len(ATT)
-        p = min(P_MAX, max(P_MIN, 1 - (1 - TARGET) ** (1 / n)))
-        players = [i for i, a in enumerate(ATT) if random.random() < a]
-        random.shuffle(players)
+        n = random.randint(7, 11)
         fallen = 0
-        for k, _ in enumerate(players, 1):
+        for k in range(1, n + 1):
             cntpos[k] = cntpos.get(k, 0) + 1
-            if random.random() < p:
+            if random.random() < P:
                 fallen += 1
                 bypos[k] = bypos.get(k, 0) + 1
         drops += fallen > 0
-        perday[min(fallen, 3)] = perday.get(min(fallen, 3), 0) + 1
-        if players:
-            history.append(len(players))
-    pos = " ".join(f"{k}:{bypos.get(k, 0) / cntpos[k] * 100:.1f}%" for k in sorted(cntpos) if cntpos[k] > days * 0.02)
-    dist = " ".join(f"{'3+' if c == 3 else c}: {perday.get(c, 0) / days * 100:.1f}%" for c in range(4))
-    print(f"p ≈ {p * 100:.1f}% por tirada (n = {n}) | días con al menos una caída {drops / days * 100:.1f}%\n  caídas por día: {dist}\n  chance por posición de llegada: {pos}")
+        perday[min(fallen, 3)] += 1
+    print(f"Simulación: {days} días con 7 a 11 jugadores, p = {P * 100:.1f} %")
+    print(f"  días con al menos una caída: {drops / days * 100:.1f} %")
+    print("  caídas por día: " + " ".join(f"{'3+' if c == 3 else c}: {perday[c] / days * 100:.1f} %" for c in range(4)))
+    print("  chance por posición de llegada: " + " ".join(f"{k}.º {bypos.get(k, 0) / cntpos[k] * 100:.1f} %" for k in sorted(cntpos)))
 
 
-run()
+print(f"p = 1 − 0,1^(1/{FLOOR}) = {P * 100:.1f} %\n")
+print("| n | al menos una | 0 | 1 | 2 | 3+ |")
+print("|---|---|---|---|---|---|")
+for n in (7, 9, 11):
+    d = distribution(n, P)
+    print(f"| {n} | {(1 - d[0]) * 100:.1f} % | " + " | ".join(f"{x * 100:.1f} %" for x in d) + " |")
+print()
+simulate()

@@ -10,10 +10,10 @@ import { normalizeRoll, type Dice } from "./dice.js";
  *   de su asistencia ni del orden de llegada. No hay tope por día: se pueden caer varios
  *   o ninguno. A un mismo jugador no se le caen dos veces el mismo día (el re-tiro no sortea).
  * - **Cuánto vale p:** si el admin la fijó (`settings.drop_probability`, en %), esa. Si no,
- *   `p = 1 − (1 − DAILY_TARGET)^(1/n)`, para que con la asistencia habitual haya al menos
- *   una caída en el día con chance `DAILY_TARGET` (90 %). `n` es la mediana de jugadores
- *   distintos por día en los últimos `ATTENDANCE_DAYS` días de juego (sin historial, los
- *   activos de los últimos `ACTIVE_DAYS` días). Siempre queda entre `P_MIN` y `P_MAX`.
+ *   `p = 1 − (1 − DAILY_TARGET)^(1/n)`, para que hasta en un día flojo haya al menos una
+ *   caída con chance `DAILY_TARGET` (90 %). `n` es el piso de asistencia: el percentil 10
+ *   de jugadores distintos por día en los últimos `ATTENDANCE_DAYS` días de juego (sin
+ *   historial suficiente, 7). Con n = 7, p ≈ 28 %. Siempre queda entre `P_MIN` y `P_MAX`.
  * - Las cuentas de prueba (rol `tester` y `lomitotester`) no se cuentan ni se caen.
  * - Los tiros caídos se guardan en `dropped_roll` (`UNIQUE(user_id, date)`). No entran en
  *   `roll`, así que no cuentan para tareas, Lomito ni estadísticas, y el jugador tira de nuevo.
@@ -23,8 +23,10 @@ import { normalizeRoll, type Dice } from "./dice.js";
 export const DAILY_TARGET = 0.9;
 export const P_MIN = 0.05;
 export const P_MAX = 0.5;
-export const ACTIVE_DAYS = 30;
 export const ATTENDANCE_DAYS = 20;
+export const ATTENDANCE_FLOOR_PERCENTILE = 0.1;
+export const MIN_ATTENDANCE_SAMPLES = 5;
+export const DEFAULT_ATTENDANCE_FLOOR = 7;
 export const DROPPED_DIE_INDEX = 3;
 
 const TEST_USERS_SQL = "(u.role IS NULL OR u.role <> 'tester') AND u.username <> 'lomitotester'";
@@ -34,22 +36,17 @@ export function canDrop(user: { role?: string | null; username?: string | null }
     return user.role !== "tester" && user.username !== "lomitotester";
 }
 
-/** Fecha `AAAA-MM-DD` de `days` días antes de `dateStr`. */
-function daysBefore(dateStr: string, days: number) {
-    const d = new Date(`${dateStr}T12:00:00Z`);
-    d.setUTCDate(d.getUTCDate() - days);
-    return d.toISOString().slice(0, 10);
-}
-
-function median(values: number[]) {
-    const s = [...values].sort((a, b) => a - b);
-    const m = Math.floor(s.length / 2);
-    return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+/** Percentil `q` (0–1) de una lista de números, por el elemento más cercano. */
+function percentile(values: number[], q: number) {
+    const sorted = [...values].sort((a, b) => a - b);
+    return sorted[Math.min(sorted.length - 1, Math.max(0, Math.round(q * (sorted.length - 1))))];
 }
 
 /**
- * Asistencia habitual (n): mediana de jugadores distintos por día en los últimos
- * días de juego, sin contar hoy. Sin historial, los activos de los últimos 30 días.
+ * Piso de asistencia (n): cuántos jugadores tiran en un día flojo. Es el percentil
+ * `ATTENDANCE_FLOOR_PERCENTILE` de jugadores distintos por día en los últimos
+ * `ATTENDANCE_DAYS` días de juego, sin contar hoy. Con menos de `MIN_ATTENDANCE_SAMPLES`
+ * días de historial, `DEFAULT_ATTENDANCE_FLOOR` (en el equipo tiran entre 7 y 11).
  */
 export async function typicalAttendance(db: Client, dateStr: string): Promise<number> {
     const res = await db.execute({
@@ -61,14 +58,8 @@ export async function typicalAttendance(db: Client, dateStr: string): Promise<nu
         args: [dateStr, dateStr, ATTENDANCE_DAYS]
     });
     const counts = res.rows.map(r => Number(r.c));
-    if (counts.length > 0) return Math.max(1, median(counts));
-
-    const activeRes = await db.execute({
-        sql: `SELECT COUNT(DISTINCT r.user_id) AS c FROM roll r JOIN user u ON u.id = r.user_id
-              WHERE r.date >= ? AND ${TEST_USERS_SQL}`,
-        args: [daysBefore(dateStr, ACTIVE_DAYS)]
-    });
-    return Math.max(1, Number(activeRes.rows[0]?.c ?? 1));
+    if (counts.length < MIN_ATTENDANCE_SAMPLES) return DEFAULT_ATTENDANCE_FLOOR;
+    return Math.max(1, percentile(counts, ATTENDANCE_FLOOR_PERCENTILE));
 }
 
 /** Chance por tirada para que con `n` jugadores haya al menos una caída con chance `DAILY_TARGET`. */

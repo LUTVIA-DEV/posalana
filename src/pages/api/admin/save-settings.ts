@@ -1,4 +1,5 @@
 import type { APIRoute } from "astro";
+import { DROP_PROBABILITY_KEY, P_MAX, P_MIN } from "../../../utils/drop.js";
 import db from "../../../db/index.js";
 import { isValidDate, isValidTime, timeToMinutes } from "../../../utils/schedule.js";
 
@@ -28,6 +29,8 @@ export const POST: APIRoute = async ({ request, locals }) => {
 	const roll_window_end = formData.get("roll_window_end")?.toString() || "";
 	const auto_verdict_enabled = formData.get("auto_verdict_enabled") === "1";
 	const special_roll_date = formData.get("special_roll_date")?.toString() || "";
+	// «Dados al piso» 🫣: chance por tirada en %; vacía = automática
+	const drop_probability = formData.get("drop_probability")?.toString().trim().replace(",", ".") || "";
 
 	if (!isValidTime(roll_window_start) || !isValidTime(roll_window_end)) {
 		return new Response("El horario de tirada debe tener formato HH:MM", { status: 400 });
@@ -37,6 +40,10 @@ export const POST: APIRoute = async ({ request, locals }) => {
 	}
 	if (special_roll_date && !isValidDate(special_roll_date)) {
 		return new Response("La fecha de la tirada especial no es válida", { status: 400 });
+	}
+	const dropPct = Number(drop_probability);
+	if (drop_probability && (!Number.isFinite(dropPct) || dropPct < P_MIN * 100 || dropPct > P_MAX * 100)) {
+		return new Response(`La chance de dados al piso tiene que estar entre ${P_MIN * 100} y ${P_MAX * 100} %`, { status: 400 });
 	}
 
 	try {
@@ -55,6 +62,12 @@ export const POST: APIRoute = async ({ request, locals }) => {
 			await setSetting("special_roll_date", special_roll_date);
 		} else {
 			await db.execute("DELETE FROM settings WHERE key = 'special_roll_date'");
+		}
+
+		if (drop_probability) {
+			await setSetting(DROP_PROBABILITY_KEY, String(dropPct));
+		} else {
+			await db.execute({ sql: "DELETE FROM settings WHERE key = ?", args: [DROP_PROBABILITY_KEY] });
 		}
 
 		return new Response(null, {

@@ -6,7 +6,7 @@ import DiceDisplay from '../components/DiceDisplay.astro';
 import StatsTable from '../components/StatsTable.astro';
 import { formatDate } from '../utils/date.js';
 import { normalizeRoll, type NormalizedRoll } from '../utils/dice.js';
-import { getDropsBetween } from '../utils/drop.js';
+import { getDropsBetween, joinNames } from '../utils/drop.js';
 import DroppedDice from '../components/DroppedDice.astro';
 
 if (!Astro.locals.user) {
@@ -60,7 +60,7 @@ const historyData = dates.map(date => {
         lomitoActivated,
         lomitoPlayers,
         exemptions: seasonExemptions,
-        drop: dropsByDate.get(date) ?? null
+        drops: dropsByDate.get(date) ?? []
     };
 });
 
@@ -369,12 +369,15 @@ const currentSeasonExemptions = await getExemptionsForSeason(db, currentSeasonId
                                             </div>
                                         )}
 
-                                        {data.drop && (
+                                        {data.drops.length > 0 && (
                                             <div class="mb-4 pl-6 md:pl-10 relative z-10">
-                                                <div class="inline-flex flex-wrap items-center gap-2 bg-lutvia-amarillo/10 border border-lutvia-amarillo/40 px-4 py-2 rounded-chico text-sm text-foreground/70 font-medium">
-                                                    <span aria-hidden="true">🫣</span>
-                                                    <span>A <strong class="text-foreground">{data.drop.display_name || data.drop.username}</strong> se le cayó un dado al piso y tuvo que tirar de nuevo</span>
-                                                    <DroppedDice dice={[data.drop.die1, data.drop.die2, data.drop.die3, data.drop.die4]} vaDeCulo={data.drop.va_de_culo} size="sm" />
+                                                <div class="inline-flex flex-col gap-1 bg-lutvia-amarillo/10 border border-lutvia-amarillo/40 px-4 py-2 rounded-chico text-sm text-foreground/70 font-medium">
+                                                    <span><span aria-hidden="true">🫣</span> A <strong class="text-foreground">{joinNames(data.drops.map(d => String(d.display_name || d.username)))}</strong> {data.drops.length === 1 ? "se le cayó un dado al piso y tuvo" : "se les cayeron dados al piso y tuvieron"} que tirar de nuevo</span>
+                                                    <span class="flex flex-wrap items-center gap-x-3 gap-y-1">
+                                                        {data.drops.map(d => (
+                                                            <DroppedDice dice={[d.die1, d.die2, d.die3, d.die4]} vaDeCulo={d.va_de_culo} size="sm" />
+                                                        ))}
+                                                    </span>
                                                 </div>
                                             </div>
                                         )}

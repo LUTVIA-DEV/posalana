@@ -2,7 +2,7 @@ import type { Client } from "@libsql/client";
 import { assignDailyChores } from "./chores.js";
 import { formatDiceText, normalizeRoll } from "./dice.js";
 import { sendDiscordVerdict } from "./discord.js";
-import { getDropForDate } from "./drop.js";
+import { getDropsForDate } from "./drop.js";
 import { getSeasonId, getExemptionsForSeason } from "./season.js";
 
 /**
@@ -72,9 +72,8 @@ export async function publishDailyVerdict(
 
     const playersCount = new Set(allRolls.map(r => String(r.user_id))).size;
 
-    // Anécdota del día: a quién se le cayeron los dados al piso
-    const drop = await getDropForDate(db, dateStr);
-    const droppedBy = drop ? String(drop.display_name || drop.username) : null;
+    // Anécdota del día: a quiénes se les cayeron los dados al piso (pueden ser varios)
+    const droppedBy = (await getDropsForDate(db, dateStr)).map(d => String(d.display_name || d.username));
 
     const result = await sendDiscordVerdict(formattedDate, choresAssigned, playersCount, options.automatic ?? false, droppedBy);
     if (result === "error") {

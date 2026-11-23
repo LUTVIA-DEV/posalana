@@ -70,19 +70,20 @@ db.executeMultiple(`
       created_at TEXT NOT NULL
   );
 
-  -- «Se cayeron los dados al piso» 🫣: el tiro invalidado del día (uno por día como máximo).
-  -- No cuenta para nada; se guarda como registro y para la anécdota.
+  -- «Se cayeron los dados al piso» 🫣: los tiros invalidados (como máximo uno por jugador y día).
+  -- No cuentan para nada; se guardan como registro y para la anécdota.
   CREATE TABLE IF NOT EXISTS dropped_roll (
       id TEXT NOT NULL PRIMARY KEY,
       user_id TEXT NOT NULL,
-      date TEXT NOT NULL UNIQUE,
+      date TEXT NOT NULL,
       time TEXT,
       die1 INTEGER NOT NULL,
       die2 INTEGER NOT NULL,
       die3 INTEGER NOT NULL,
       die4 INTEGER NOT NULL,
       va_de_culo INTEGER NOT NULL DEFAULT 0,
-      FOREIGN KEY (user_id) REFERENCES user(id)
+      FOREIGN KEY (user_id) REFERENCES user(id),
+      UNIQUE(user_id, date)
   );
 
   -- Casi todas las consultas filtran las tiradas por fecha
@@ -123,6 +124,35 @@ db.executeMultiple(`
       // Column probably already exists, ignore
   }
   
+  // «Dados al piso» 🫣: la primera versión tenía UNIQUE(date) (una caída por día); ahora es
+  // una por jugador y día. Si la tabla quedó con el esquema viejo, se rearma con los mismos datos.
+  try {
+      const t = await db.execute("SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'dropped_roll'");
+      const sql = String(t.rows[0]?.sql ?? "");
+      if (sql && !sql.includes("UNIQUE(user_id, date)")) {
+          await db.executeMultiple(`
+              ALTER TABLE dropped_roll RENAME TO dropped_roll_old;
+              CREATE TABLE dropped_roll (
+                  id TEXT NOT NULL PRIMARY KEY,
+                  user_id TEXT NOT NULL,
+                  date TEXT NOT NULL,
+                  time TEXT,
+                  die1 INTEGER NOT NULL,
+                  die2 INTEGER NOT NULL,
+                  die3 INTEGER NOT NULL,
+                  die4 INTEGER NOT NULL,
+                  va_de_culo INTEGER NOT NULL DEFAULT 0,
+                  FOREIGN KEY (user_id) REFERENCES user(id),
+                  UNIQUE(user_id, date)
+              );
+              INSERT INTO dropped_roll SELECT id, user_id, date, time, die1, die2, die3, die4, va_de_culo FROM dropped_roll_old;
+              DROP TABLE dropped_roll_old;
+          `);
+      }
+  } catch (e) {
+      console.error("No se pudo migrar dropped_roll:", e);
+  }
+
   // «Va de culo» 🍑: se guardan los dados reales y este flag; el tiro definitivo se recalcula.
   try {
       await db.execute("ALTER TABLE roll ADD COLUMN va_de_culo INTEGER NOT NULL DEFAULT 0");

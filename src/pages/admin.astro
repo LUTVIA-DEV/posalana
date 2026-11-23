@@ -7,6 +7,7 @@ import { getSeasonId, getPreviousSeasons, formatSeasonName } from "../utils/seas
 import { getArgentinaNow, getRollSchedule, getRollWindowStatus } from "../utils/schedule.js";
 import { formatDate } from "../utils/date.js";
 import { normalizeRoll } from "../utils/dice.js";
+import { DROP_PROBABILITY_KEY, P_MAX, P_MIN, defaultDropProbability } from "../utils/drop.js";
 
 const { user } = Astro.locals;
 
@@ -62,6 +63,10 @@ settingsRes.rows.forEach((s: any) => settingsMap.set(s.key, s.value));
 const now = getArgentinaNow();
 const dateStr = now.dateStr;
 const currentSeason = getSeasonId(dateStr);
+
+// «Dados al piso» 🫣: chance por tirada (la fijada por el admin, o la automática por asistencia)
+const dropDefaultPct = Math.round((await defaultDropProbability(db, dateStr)) * 1000) / 10;
+const dropCustomPct = settingsMap.has(DROP_PROBABILITY_KEY) ? String(settingsMap.get(DROP_PROBABILITY_KEY)) : '';
 
 // Horario de tirada y estado del veredicto automático de hoy
 const schedule = await getRollSchedule(db);
@@ -149,6 +154,11 @@ uniqueSeasons.sort((a, b) => {
                             <label class="block text-sm font-bold mb-1 text-foreground/80">Tirada especial</label>
                             <input type="date" name="special_roll_date" value={schedule.specialDate || ''} class="w-full bg-foreground/5 border border-foreground/10 rounded-chico p-3 text-foreground" />
                             <p class="text-xs text-foreground/50 mt-1">Se juega martes, miércoles y jueves. Elegí una fecha para habilitar la tirada un lunes, viernes o fin de semana, con el horario de arriba. Dejala vacía para no habilitar ninguna.{schedule.specialDate === dateStr && <strong class="text-foreground/70"> Hoy hay tirada especial.</strong>}</p>
+                        </div>
+                        <div>
+                            <label for="drop_probability" class="block text-sm font-bold mb-1 text-foreground/80"><span aria-hidden="true">🫣</span> Chance de dados al piso (% por tirada)</label>
+                            <input type="number" id="drop_probability" name="drop_probability" min={P_MIN * 100} max={P_MAX * 100} step="0.1" inputmode="decimal" value={dropCustomPct} placeholder={`Automática: ${dropDefaultPct}`} class="w-full bg-foreground/5 border border-foreground/10 rounded-chico p-3 text-foreground tabular-nums" />
+                            <p class="text-xs text-foreground/50 mt-1">Chance de que se caigan los dados en la primera tirada del día de cada jugador, la misma para todos. Dejala vacía para usar la automática (<span class="tabular-nums">{dropDefaultPct} %</span> hoy: la que da ~90 % de días con al menos una caída con la asistencia habitual). Entre <span class="tabular-nums">{P_MIN * 100}</span> y <span class="tabular-nums">{P_MAX * 100}</span> %.</p>
                         </div>
                         <div>
                             <label class="flex items-center gap-3 cursor-pointer">

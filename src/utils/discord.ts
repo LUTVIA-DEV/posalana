@@ -1,6 +1,6 @@
 import { colorLutviaEntero } from "./tokens.js";
 import { finalDice, type Dice } from "./dice.js";
-import { DROPPED_DIE_INDEX } from "./drop.js";
+import { DROPPED_DIE_INDEX, joinNames } from "./drop.js";
 
 // Dirección pública del sitio, para los enlaces y el avatar del bot en Discord
 const SITE_URL = (process.env.SITE_URL || "https://posalana.lutvia.com").replace(/\/$/, "");
@@ -132,7 +132,7 @@ export async function sendDiscordVerdict(
     },
     playersCount: number,
     automatic = false,
-    droppedBy: string | null = null
+    droppedBy: string[] = []
 ): Promise<"ok" | "no-webhook" | "error"> {
     const webhookUrl = process.env.DISCORD_WEBHOOK_URL;
     if (!webhookUrl) {
@@ -148,7 +148,7 @@ export async function sendDiscordVerdict(
 
     const embed = {
         title: `📜 EL DECRETO DIARIO - ${dateStr}${automatic ? " · ⏰ MESA CERRADA" : ""}`,
-        description: `🚨 **¡ATENCIÓN JUGADORES!** El destino ha hablado y las sentencias de hoy son definitivas e inapelables.\n\n## 🎲 ${playersCount} ${playersCount === 1 ? "jugador tiró" : "jugadores tiraron"} hoy\n\nAquí tienen la distribución oficial de tareas de la mesa para hoy:\n\n🍽️ **PO:** **${poneStr}**\n🗑️ **SA:** **${sacaStr}**\n🧽 **LA:** **${lavaStr}**\n🎉 **NA:** **${zafaronStr !== "Ninguno" ? zafaronStr : "Ninguno"}**\n🛡️ **EXENTOS HOY:** **${exentosStr !== "Ninguno" ? exentosStr : "Ninguno"}**\n${droppedBy ? `🫣 **DADOS AL PISO:** a **${droppedBy}** se le cayó un dado y tuvo que tirar de nuevo\n` : ""}\n👉 *¿Querés apelar con tus estadísticas?* Entrá a la [App de POSALANA](${SITE_URL}/)`,
+        description: `🚨 **¡ATENCIÓN JUGADORES!** El destino ha hablado y las sentencias de hoy son definitivas e inapelables.\n\n## 🎲 ${playersCount} ${playersCount === 1 ? "jugador tiró" : "jugadores tiraron"} hoy\n\nAquí tienen la distribución oficial de tareas de la mesa para hoy:\n\n🍽️ **PO:** **${poneStr}**\n🗑️ **SA:** **${sacaStr}**\n🧽 **LA:** **${lavaStr}**\n🎉 **NA:** **${zafaronStr !== "Ninguno" ? zafaronStr : "Ninguno"}**\n🛡️ **EXENTOS HOY:** **${exentosStr !== "Ninguno" ? exentosStr : "Ninguno"}**\n${droppedBy.length > 0 ? `🫣 **DADOS AL PISO:** a **${joinNames(droppedBy)}** ${droppedBy.length === 1 ? "se le cayó un dado y tuvo" : "se les cayeron los dados y tuvieron"} que tirar de nuevo\n` : ""}\n👉 *¿Querés apelar con tus estadísticas?* Entrá a la [App de POSALANA](${SITE_URL}/)`,
         color: colorLutviaEntero("rosa"),
         footer: {
             text: automatic

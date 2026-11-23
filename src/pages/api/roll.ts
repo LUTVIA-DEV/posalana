@@ -3,7 +3,7 @@ import db from "../../db/index.js";
 import { finalDice, normalizeRoll, type Dice } from "../../utils/dice.js";
 import { sendDiscordDrop, sendDiscordRoll } from "../../utils/discord.js";
 import { devUnlimitedRolls } from "../../utils/dev.js";
-import { canDrop, claimDrop, dropProbability, hasDropToday, typicalAttendance } from "../../utils/drop.js";
+import { canDrop, claimDrop, getDropProbability, hasUserDropToday } from "../../utils/drop.js";
 import { getArgentinaNow, getNextPlayDay, getRollSchedule, getRollWindowStatus } from "../../utils/schedule.js";
 
 function rollDie() {
@@ -102,13 +102,11 @@ export async function POST(context: APIContext): Promise<Response> {
     if (context.locals.user && canDrop(context.locals.user)) {
         let drops = false;
         if (forceDrop) {
-            await db.execute({ sql: "DELETE FROM dropped_roll WHERE date = ?", args: [dateStr] });
+            await db.execute({ sql: "DELETE FROM dropped_roll WHERE user_id = ? AND date = ?", args: [userId, dateStr] });
             drops = true;
-        } else {
-            // Chance fija en la primera tirada del día, igual para todos; máximo una caída por día
-            if (!hadRollToday && !(await hasDropToday(db, dateStr))) {
-                drops = Math.random() < dropProbability(await typicalAttendance(db, dateStr));
-            }
+        } else if (!hadRollToday && !(await hasUserDropToday(db, userId, dateStr))) {
+            // Chance fija e independiente en la primera tirada del día, igual para todos (sin tope por día)
+            drops = Math.random() < (await getDropProbability(db, dateStr));
         }
         if (drops) {
             const raw: Dice = [d1, d2, d3, d4];

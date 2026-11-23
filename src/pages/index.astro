@@ -8,7 +8,7 @@ import ScheduleNotice from '../components/ScheduleNotice.astro';
 import { formatDate } from '../utils/date.js';
 import { normalizeRoll } from '../utils/dice.js';
 import { devUnlimitedRolls } from '../utils/dev.js';
-import { getDropForDate } from '../utils/drop.js';
+import { getDropsForDate } from '../utils/drop.js';
 import DroppedDice from '../components/DroppedDice.astro';
 import { getArgentinaNow, getNextPlayDay, getRollSchedule, getRollWindowStatus, SCHEDULE_NOTICE_UNTIL } from '../utils/schedule.js';
 
@@ -50,13 +50,14 @@ const allRollsRes = await db.execute({
 // Tiro definitivo (con «va de culo» ya aplicado); el orden lo da assignDailyChores
 const allRolls = allRollsRes.rows.map(normalizeRoll);
 
-// «Se cayeron los dados al piso» 🫣: el tiro invalidado de hoy (si hubo) y si fue el tuyo
-const todayDrop = await getDropForDate(db, dateStr);
-const myDrop = todayDrop && String(todayDrop.user_id) === String(user.id) ? todayDrop : null;
-const dropperRerolled = !!todayDrop && allRolls.some(r => String(r.user_id) === String(todayDrop.user_id));
+// «Se cayeron los dados al piso» 🫣: los tiros invalidados de hoy (pueden ser varios) y si uno fue el tuyo
+const todayDrops = await getDropsForDate(db, dateStr);
+const droppedUserIds = new Set(todayDrops.map(d => String(d.user_id)));
+const rolledUserIds = new Set(allRolls.map(r => String(r.user_id)));
+const myDrop = todayDrops.find(d => String(d.user_id) === String(user.id)) ?? null;
 // Recién se cayó (venís del redirect de /api/roll): el dado se cae con animación
 const justDropped = !!myDrop && !hasRolled && Astro.url.searchParams.get('caida') === '1';
-const dropDice = (d: NonNullable<typeof todayDrop>) => [d.die1, d.die2, d.die3, d.die4] as number[];
+const dropDice = (d: (typeof todayDrops)[number]) => [d.die1, d.die2, d.die3, d.die4] as number[];
 
 const chores = [
     { label: "Lava los platos", code: "LA", emoji: "🧽" },
@@ -375,12 +376,18 @@ const savedPlayers = sortedRolls.filter(r => rollChoreMap.get(r.id)?.code === 'N
                     <i class="fa-solid fa-trophy text-secondary"></i> Ranking POSALANA
                 </h3>
             </div>
-            {todayDrop && (
-                <p class="-mt-4 mb-6 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-foreground/60 font-medium bg-lutvia-amarillo/10 border border-lutvia-amarillo/40 rounded-chico px-4 py-2">
-                    <span aria-hidden="true">🫣</span>
-                    <span>A <strong class="text-foreground">{todayDrop.display_name || todayDrop.username}</strong> se le cayó un dado al piso{dropperRerolled ? " y tuvo que tirar de nuevo." : ": tiene que tirar de nuevo."}</span>
-                    <DroppedDice dice={dropDice(todayDrop)} vaDeCulo={todayDrop.va_de_culo} size="sm" />
-                </p>
+            {todayDrops.length > 0 && (
+                <div class="-mt-4 mb-6 text-sm text-foreground/60 font-medium bg-lutvia-amarillo/10 border border-lutvia-amarillo/40 rounded-chico px-4 py-2">
+                    <p class="font-black text-foreground/70 mb-1"><span aria-hidden="true">🫣</span> {todayDrops.length === 1 ? "Hoy se cayeron dados al piso" : `Hoy se cayeron dados al piso ${todayDrops.length} veces`}</p>
+                    <ul class="flex flex-col gap-1">
+                        {todayDrops.map(d => (
+                            <li class="flex flex-wrap items-center gap-x-2 gap-y-1">
+                                <span>A <strong class="text-foreground">{d.display_name || d.username}</strong>{rolledUserIds.has(String(d.user_id)) ? ", que volvió a tirar" : ", que tiene que tirar de nuevo"}</span>
+                                <DroppedDice dice={dropDice(d)} vaDeCulo={d.va_de_culo} size="sm" />
+                            </li>
+                        ))}
+                    </ul>
+                </div>
             )}
             
             {allRolls.length === 0 ? (
@@ -443,7 +450,7 @@ const savedPlayers = sortedRolls.filter(r => rollChoreMap.get(r.id)?.code === 'N
                                             <span class={`inline-block text-[10px] uppercase tracking-widest font-bold px-2 py-0.5 rounded-pildora ${config.badge}`}>
                                                 {chore.code}
                                             </span>
-                                            {todayDrop && String(todayDrop.user_id) === String(roll.user_id) && (
+                                            {droppedUserIds.has(String(roll.user_id)) && (
                                                 <span class="inline-flex items-center gap-1 text-[9px] font-black tracking-wider uppercase bg-lutvia-amarillo/20 text-foreground/70 border border-lutvia-amarillo/50 px-2 py-0.5 rounded-chico" title="Su primer tiro se cayó al piso y tuvo que tirar de nuevo">
                                                     <span aria-hidden="true">🫣</span> Volvió a tirar
                                                 </span>

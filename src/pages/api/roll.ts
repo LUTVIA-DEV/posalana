@@ -3,7 +3,7 @@ import db from "../../db/index.js";
 import { finalDice, normalizeRoll, type Dice } from "../../utils/dice.js";
 import { sendDiscordDrop, sendDiscordRoll } from "../../utils/discord.js";
 import { devUnlimitedRolls } from "../../utils/dev.js";
-import { canDrop, claimDrop, getOrDrawDropTarget } from "../../utils/drop.js";
+import { canDrop, claimDrop, dropProbability, hasDropToday, typicalAttendance } from "../../utils/drop.js";
 import { getArgentinaNow, getNextPlayDay, getRollSchedule, getRollWindowStatus } from "../../utils/schedule.js";
 
 function rollDie() {
@@ -47,6 +47,8 @@ export async function POST(context: APIContext): Promise<Response> {
         args: [userId, dateStr]
     });
 
+    // En modo desarrollo se puede volver a tirar: ese re-tiro no es la primera tirada del día
+    const hadRollToday = existing.rows.length > 0;
     if (existing.rows.length > 0) {
         if (!unlimited) {
             return new Response("Ya tiraste los dados hoy", { status: 400 });
@@ -103,9 +105,10 @@ export async function POST(context: APIContext): Promise<Response> {
             await db.execute({ sql: "DELETE FROM dropped_roll WHERE date = ?", args: [dateStr] });
             drops = true;
         } else {
-            // El sorteo previo del día (secreto) dice a quién se le caen los dados en su primera tirada
-            const target = await getOrDrawDropTarget(db, dateStr);
-            drops = target === String(userId);
+            // Chance fija en la primera tirada del día, igual para todos; máximo una caída por día
+            if (!hadRollToday && !(await hasDropToday(db, dateStr))) {
+                drops = Math.random() < dropProbability(await typicalAttendance(db, dateStr));
+            }
         }
         if (drops) {
             const raw: Dice = [d1, d2, d3, d4];

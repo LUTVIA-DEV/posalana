@@ -70,6 +70,21 @@ db.executeMultiple(`
       created_at TEXT NOT NULL
   );
 
+  -- «Se cayeron los dados al piso» 🫣: el tiro invalidado del día (uno por día como máximo).
+  -- No cuenta para nada; se guarda como registro y para la anécdota.
+  CREATE TABLE IF NOT EXISTS dropped_roll (
+      id TEXT NOT NULL PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      date TEXT NOT NULL UNIQUE,
+      time TEXT,
+      die1 INTEGER NOT NULL,
+      die2 INTEGER NOT NULL,
+      die3 INTEGER NOT NULL,
+      die4 INTEGER NOT NULL,
+      va_de_culo INTEGER NOT NULL DEFAULT 0,
+      FOREIGN KEY (user_id) REFERENCES user(id)
+  );
+
   -- Casi todas las consultas filtran las tiradas por fecha
   CREATE INDEX IF NOT EXISTS idx_roll_date ON roll(date);
 `).catch(console.error);

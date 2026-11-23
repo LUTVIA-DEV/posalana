@@ -2,6 +2,7 @@ import type { Client } from "@libsql/client";
 import { assignDailyChores } from "./chores.js";
 import { formatDiceText, normalizeRoll } from "./dice.js";
 import { sendDiscordVerdict } from "./discord.js";
+import { getDropForDate } from "./drop.js";
 import { getSeasonId, getExemptionsForSeason } from "./season.js";
 
 /**
@@ -71,7 +72,11 @@ export async function publishDailyVerdict(
 
     const playersCount = new Set(allRolls.map(r => String(r.user_id))).size;
 
-    const result = await sendDiscordVerdict(formattedDate, choresAssigned, playersCount, options.automatic ?? false);
+    // Anécdota del día: a quién se le cayeron los dados al piso
+    const drop = await getDropForDate(db, dateStr);
+    const droppedBy = drop ? String(drop.display_name || drop.username) : null;
+
+    const result = await sendDiscordVerdict(formattedDate, choresAssigned, playersCount, options.automatic ?? false, droppedBy);
     if (result === "error") {
         throw new Error("Discord rechazó el veredicto");
     }

@@ -1,8 +1,9 @@
 import type { APIContext } from "astro";
 import db from "../../db/index.js";
 import { finalDice, normalizeRoll, type Dice } from "../../utils/dice.js";
-import { sendDiscordRoll } from "../../utils/discord.js";
+import { sendDiscordDrop, sendDiscordRoll } from "../../utils/discord.js";
 import { devUnlimitedRolls } from "../../utils/dev.js";
+import { canDrop, claimDrop, dropChance } from "../../utils/drop.js";
 import { getArgentinaNow, getNextPlayDay, getRollSchedule, getRollWindowStatus } from "../../utils/schedule.js";
 
 function rollDie() {
@@ -56,9 +57,12 @@ export async function POST(context: APIContext): Promise<Response> {
 
     // «Va de culo» 🍑: se canta antes de tirar (viene en el pedido) y el servidor da vuelta los dados.
     let vaDeCulo = false;
+    // Solo en local (DEV_UNLIMITED_ROLLS=1): forzar que este tiro se caiga al piso
+    let forceDrop = false;
     try {
         const form = await context.request.formData();
         vaDeCulo = form.get("va_de_culo") === "1";
+        forceDrop = unlimited && form.get("forzar_caida") === "1";
     } catch {
         // Pedido sin formulario: tirada normal
     }
@@ -87,6 +91,29 @@ export async function POST(context: APIContext): Promise<Response> {
             [d1, d2, d3, d4] = finalDice([admin.die1, admin.die2, admin.die3, admin.die4], vaDeCulo);
         } else {
             return new Response("El admin debe tirar primero para poder testear la cláusula lomito.", { status: 400 });
+        }
+    }
+
+    const displayName = context.locals.user?.display_name || context.locals.user?.username || "Usuario";
+
+    // «Se cayeron los dados al piso» 🫣: un tiro por día se invalida al azar y hay que tirar de nuevo
+    if (context.locals.user && canDrop(context.locals.user)) {
+        let drops = false;
+        if (forceDrop) {
+            await db.execute({ sql: "DELETE FROM dropped_roll WHERE date = ?", args: [dateStr] });
+            drops = true;
+        } else {
+            const { chance } = await dropChance(db, userId, dateStr);
+            drops = chance > 0 && Math.random() < chance;
+        }
+        if (drops) {
+            const raw: Dice = [d1, d2, d3, d4];
+            if (await claimDrop(db, { userId, dateStr, timeStr, raw, vaDeCulo })) {
+                sendDiscordDrop(displayName, raw, vaDeCulo).catch(err => {
+                    console.error("Error sending Discord drop:", err);
+                });
+                return context.redirect("/?caida=1");
+            }
         }
     }
 
@@ -139,7 +166,6 @@ export async function POST(context: APIContext): Promise<Response> {
     }
 
     // Send Discord notification asynchronously (don't block the redirect)
-    const displayName = context.locals.user?.display_name || context.locals.user?.username || "Usuario";
     sendDiscordRoll(displayName, rawDice, vaDeCulo, discordLomitoActivated, discordLomitoPlayers).catch(err => {
         console.error("Error trigger sending Discord roll:", err);
     });

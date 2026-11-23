@@ -1,5 +1,6 @@
 import { colorLutviaEntero } from "./tokens.js";
 import { finalDice, type Dice } from "./dice.js";
+import { DROPPED_DIE_INDEX } from "./drop.js";
 
 // Dirección pública del sitio, para los enlaces y el avatar del bot en Discord
 const SITE_URL = (process.env.SITE_URL || "https://posalana.lutvia.com").replace(/\/$/, "");
@@ -86,6 +87,40 @@ export async function sendDiscordRoll(
     }
 }
 
+/** «Se cayeron los dados al piso» 🫣: anécdota del tiro invalidado del día. */
+export async function sendDiscordDrop(displayName: string, rawDice: Dice, vaDeCulo: boolean) {
+    const webhookUrl = process.env.DISCORD_WEBHOOK_URL;
+    if (!webhookUrl) {
+        console.warn("DISCORD_WEBHOOK_URL is not configured.");
+        return;
+    }
+
+    // Se ven los tres dados que quedaron en la mesa; el último rodó abajo de la mesa
+    const shown = finalDice(rawDice, vaDeCulo)
+        .map((v, i) => (i === DROPPED_DIE_INDEX ? "🕳️" : String(v)))
+        .join(" - ");
+    const embed = {
+        title: "🫣 ¡Se cayeron los dados al piso!",
+        description: `**${displayName}** tiró con tantas ganas que un dado rodó abajo de la mesa:\n👉 **${shown}**${vaDeCulo ? " 🍑" : ""}\n\n🧹 *Ese tiro no vale: ${displayName} tiene que tirar de nuevo.* Pasa una vez por día y le puede tocar a cualquiera.\n\n🔗 Mirá cómo viene la mesa en la [App de POSALANA](${SITE_URL}/)`,
+        color: colorLutviaEntero("amarillo"),
+        footer: { text: "POSALANA • Dados al piso 🫣" },
+        timestamp: new Date().toISOString()
+    };
+
+    try {
+        const res = await fetch(webhookUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ embeds: [embed], avatar_url: BOT_AVATAR_URL })
+        });
+        if (!res.ok) {
+            console.error("Failed to send Discord drop:", await res.text());
+        }
+    } catch (err) {
+        console.error("Error sending Discord drop:", err);
+    }
+}
+
 export async function sendDiscordVerdict(
     dateStr: string,
     choresAssigned: {
@@ -96,7 +131,8 @@ export async function sendDiscordVerdict(
         exentos: string[];
     },
     playersCount: number,
-    automatic = false
+    automatic = false,
+    droppedBy: string | null = null
 ): Promise<"ok" | "no-webhook" | "error"> {
     const webhookUrl = process.env.DISCORD_WEBHOOK_URL;
     if (!webhookUrl) {
@@ -112,7 +148,7 @@ export async function sendDiscordVerdict(
 
     const embed = {
         title: `📜 EL DECRETO DIARIO - ${dateStr}${automatic ? " · ⏰ MESA CERRADA" : ""}`,
-        description: `🚨 **¡ATENCIÓN JUGADORES!** El destino ha hablado y las sentencias de hoy son definitivas e inapelables.\n\n## 🎲 ${playersCount} ${playersCount === 1 ? "jugador tiró" : "jugadores tiraron"} hoy\n\nAquí tienen la distribución oficial de tareas de la mesa para hoy:\n\n🍽️ **PO:** **${poneStr}**\n🗑️ **SA:** **${sacaStr}**\n🧽 **LA:** **${lavaStr}**\n🎉 **NA:** **${zafaronStr !== "Ninguno" ? zafaronStr : "Ninguno"}**\n🛡️ **EXENTOS HOY:** **${exentosStr !== "Ninguno" ? exentosStr : "Ninguno"}**\n\n👉 *¿Querés apelar con tus estadísticas?* Entrá a la [App de POSALANA](${SITE_URL}/)`,
+        description: `🚨 **¡ATENCIÓN JUGADORES!** El destino ha hablado y las sentencias de hoy son definitivas e inapelables.\n\n## 🎲 ${playersCount} ${playersCount === 1 ? "jugador tiró" : "jugadores tiraron"} hoy\n\nAquí tienen la distribución oficial de tareas de la mesa para hoy:\n\n🍽️ **PO:** **${poneStr}**\n🗑️ **SA:** **${sacaStr}**\n🧽 **LA:** **${lavaStr}**\n🎉 **NA:** **${zafaronStr !== "Ninguno" ? zafaronStr : "Ninguno"}**\n🛡️ **EXENTOS HOY:** **${exentosStr !== "Ninguno" ? exentosStr : "Ninguno"}**\n${droppedBy ? `🫣 **DADOS AL PISO:** a **${droppedBy}** se le cayó un dado y tuvo que tirar de nuevo\n` : ""}\n👉 *¿Querés apelar con tus estadísticas?* Entrá a la [App de POSALANA](${SITE_URL}/)`,
         color: colorLutviaEntero("rosa"),
         footer: {
             text: automatic

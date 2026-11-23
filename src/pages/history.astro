@@ -6,6 +6,8 @@ import DiceDisplay from '../components/DiceDisplay.astro';
 import StatsTable from '../components/StatsTable.astro';
 import { formatDate } from '../utils/date.js';
 import { normalizeRoll, type NormalizedRoll } from '../utils/dice.js';
+import { getDropsBetween } from '../utils/drop.js';
+import DroppedDice from '../components/DroppedDice.astro';
 
 if (!Astro.locals.user) {
 	return Astro.redirect('/login');
@@ -35,6 +37,9 @@ import { assignDailyChores, chores } from '../utils/chores.js';
 
 const dates = Object.keys(groupedRolls).sort((a, b) => b.localeCompare(a));
 
+// «Se cayeron los dados al piso» 🫣: la anécdota de cada día (el tiro caído no cuenta para nada)
+const dropsByDate = await getDropsBetween(db, dates[dates.length - 1] ?? '0000-01-01', dates[0] ?? '9999-12-31');
+
 // Calculate unique seasons present in history dates and load their exemptions
 const uniqueSeasonsInHistory = Array.from(new Set(dates.map(date => getSeasonId(date))));
 const exemptionsMap = new Map<string, any[]>();
@@ -54,7 +59,8 @@ const historyData = dates.map(date => {
         choreMap: rollChoreMap,
         lomitoActivated,
         lomitoPlayers,
-        exemptions: seasonExemptions
+        exemptions: seasonExemptions,
+        drop: dropsByDate.get(date) ?? null
     };
 });
 
@@ -359,6 +365,16 @@ const currentSeasonExemptions = await getExemptionsForSeason(db, currentSeasonId
                                             <div class="pl-6 md:pl-10 mb-4 relative z-10">
                                                 <div class="bg-accent/10 border border-accent/20 px-4 py-2 rounded-chico inline-block">
                                                     <span class="text-accent font-bold text-sm">🥪 Cláusula Lomito activada por {data.lomitoPlayers.join(" y ")}</span>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {data.drop && (
+                                            <div class="mb-4 pl-6 md:pl-10 relative z-10">
+                                                <div class="inline-flex flex-wrap items-center gap-2 bg-lutvia-amarillo/10 border border-lutvia-amarillo/40 px-4 py-2 rounded-chico text-sm text-foreground/70 font-medium">
+                                                    <span aria-hidden="true">🫣</span>
+                                                    <span>A <strong class="text-foreground">{data.drop.display_name || data.drop.username}</strong> se le cayó un dado al piso y tuvo que tirar de nuevo</span>
+                                                    <DroppedDice dice={[data.drop.die1, data.drop.die2, data.drop.die3, data.drop.die4]} vaDeCulo={data.drop.va_de_culo} size="sm" />
                                                 </div>
                                             </div>
                                         )}

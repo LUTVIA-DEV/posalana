@@ -8,6 +8,8 @@ import ScheduleNotice from '../components/ScheduleNotice.astro';
 import { formatDate } from '../utils/date.js';
 import { normalizeRoll } from '../utils/dice.js';
 import { devUnlimitedRolls } from '../utils/dev.js';
+import { getDropForDate } from '../utils/drop.js';
+import DroppedDice from '../components/DroppedDice.astro';
 import { getArgentinaNow, getNextPlayDay, getRollSchedule, getRollWindowStatus, SCHEDULE_NOTICE_UNTIL } from '../utils/schedule.js';
 
 if (!Astro.locals.user) {
@@ -47,6 +49,14 @@ const allRollsRes = await db.execute({
 });
 // Tiro definitivo (con «va de culo» ya aplicado); el orden lo da assignDailyChores
 const allRolls = allRollsRes.rows.map(normalizeRoll);
+
+// «Se cayeron los dados al piso» 🫣: el tiro invalidado de hoy (si hubo) y si fue el tuyo
+const todayDrop = await getDropForDate(db, dateStr);
+const myDrop = todayDrop && String(todayDrop.user_id) === String(user.id) ? todayDrop : null;
+const dropperRerolled = !!todayDrop && allRolls.some(r => String(r.user_id) === String(todayDrop.user_id));
+// Recién se cayó (venís del redirect de /api/roll): el dado se cae con animación
+const justDropped = !!myDrop && !hasRolled && Astro.url.searchParams.get('caida') === '1';
+const dropDice = (d: NonNullable<typeof todayDrop>) => [d.die1, d.die2, d.die3, d.die4] as number[];
 
 const chores = [
     { label: "Lava los platos", code: "LA", emoji: "🧽" },
@@ -198,6 +208,12 @@ const savedPlayers = sortedRolls.filter(r => rollChoreMap.get(r.id)?.code === 'N
                 <div class="text-center sm:text-left mb-4 sm:mb-0">
                     <p class="text-secondary font-bold tracking-widest uppercase text-[10px] mb-1">Tirada del {formatDate(dateStr)}</p>
                     <p class="text-sm text-foreground/80 font-medium">Ya cumpliste con tu destino de hoy.</p>
+                    {myDrop && (
+                        <p class="mt-1 inline-flex items-center gap-1.5 text-xs text-foreground/50 font-medium">
+                            <span aria-hidden="true">🫣</span> Tu primer tiro se cayó al piso:
+                            <DroppedDice dice={dropDice(myDrop)} vaDeCulo={myDrop.va_de_culo} size="sm" />
+                        </p>
+                    )}
                 </div>
                 <div class="flex items-center gap-3 bg-secondary/5 border border-secondary/20 px-4 py-2 rounded-chico shadow-inner">
                     <p class="text-xs text-secondary font-bold uppercase tracking-wider mr-2 hidden md:block">Tu Suerte:</p>
@@ -214,6 +230,15 @@ const savedPlayers = sortedRolls.filter(r => rollChoreMap.get(r.id)?.code === 'N
                 <div class="relative z-10">
                     <p class="text-secondary font-bold tracking-widest uppercase text-xs mb-2">Tirada Oficial</p>
                     <h2 class="text-4xl md:text-5xl font-black mb-2 tracking-tight text-foreground text-balance">{formatDate(dateStr)}</h2>
+                    {myDrop && !hasRolled && (
+                        <div role={justDropped ? "alert" : undefined} class:list={["mx-auto max-w-md my-6 bg-lutvia-amarillo/15 border-2 border-lutvia-amarillo/60 rounded-bloque px-5 py-4", justDropped && "animate-in fade-in zoom-in-95 duration-300"]}>
+                            <p class="text-lg font-black text-foreground tracking-tight text-balance"><span aria-hidden="true">🫣</span> ¡Se te cayó un dado al piso!</p>
+                            <div class="my-3 flex justify-center">
+                                <DroppedDice dice={dropDice(myDrop)} vaDeCulo={myDrop.va_de_culo} size="lg" animate={justDropped} />
+                            </div>
+                            <p class="text-sm text-foreground/70 font-medium text-pretty">Ese tiro no vale. Juntalo y <strong>tirá de nuevo</strong>: podés volver a elegir si va de culo.</p>
+                        </div>
+                    )}
                     {canRoll ? (
                     <>
                     <p class="text-foreground/60 mb-3 max-w-md mx-auto text-pretty">El destino no está escrito, se decide con los dados. ¿Zafás o lavás?</p>
@@ -230,6 +255,12 @@ const savedPlayers = sortedRolls.filter(r => rollChoreMap.get(r.id)?.code === 'N
                             <!-- Hover gradient overlay -->
                             <div class="absolute inset-0 bg-gradient-to-r from-transparent via-background/20 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
                         </button>
+                        {unlimitedRolls && (
+                            <label class="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-foreground/40 cursor-pointer select-none">
+                                <input type="checkbox" name="forzar_caida" value="1" class="accent-[var(--lutvia-oscuro)]" />
+                                <i class="fa-solid fa-flask" aria-hidden="true"></i> Forzar dados al piso (dev)
+                            </label>
+                        )}
                         <!-- «Va de culo» 🍑: se canta antes de tirar; el servidor da vuelta los dados (7 − x) -->
                         <div class="relative inline-flex items-center gap-2 bg-white border-2 border-foreground/10 hover:border-accent/40 has-[:checked]:border-accent has-[:checked]:bg-accent/10 has-[:checked]:shadow-[0_4px_16px_rgba(204,102,255,0.25)] pl-1.5 pr-1.5 py-1.5 rounded-pildora shadow-sm transition-all duration-300">
                         <label for="va-de-culo" class="group/switch inline-flex items-center gap-2 cursor-pointer select-none">
@@ -344,6 +375,13 @@ const savedPlayers = sortedRolls.filter(r => rollChoreMap.get(r.id)?.code === 'N
                     <i class="fa-solid fa-trophy text-secondary"></i> Ranking POSALANA
                 </h3>
             </div>
+            {todayDrop && (
+                <p class="-mt-4 mb-6 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-foreground/60 font-medium bg-lutvia-amarillo/10 border border-lutvia-amarillo/40 rounded-chico px-4 py-2">
+                    <span aria-hidden="true">🫣</span>
+                    <span>A <strong class="text-foreground">{todayDrop.display_name || todayDrop.username}</strong> se le cayó un dado al piso{dropperRerolled ? " y tuvo que tirar de nuevo." : ": tiene que tirar de nuevo."}</span>
+                    <DroppedDice dice={dropDice(todayDrop)} vaDeCulo={todayDrop.va_de_culo} size="sm" />
+                </p>
+            )}
             
             {allRolls.length === 0 ? (
                 <div class="py-16 text-center border-2 border-dashed border-foreground/10 rounded-bloque">
@@ -405,6 +443,11 @@ const savedPlayers = sortedRolls.filter(r => rollChoreMap.get(r.id)?.code === 'N
                                             <span class={`inline-block text-[10px] uppercase tracking-widest font-bold px-2 py-0.5 rounded-pildora ${config.badge}`}>
                                                 {chore.code}
                                             </span>
+                                            {todayDrop && String(todayDrop.user_id) === String(roll.user_id) && (
+                                                <span class="inline-flex items-center gap-1 text-[9px] font-black tracking-wider uppercase bg-lutvia-amarillo/20 text-foreground/70 border border-lutvia-amarillo/50 px-2 py-0.5 rounded-chico" title="Su primer tiro se cayó al piso y tuvo que tirar de nuevo">
+                                                    <span aria-hidden="true">🫣</span> Volvió a tirar
+                                                </span>
+                                            )}
                                             {userExemptions.map(ex => {
                                                 const targetChore = chores.find(c => c.code === ex.chore_code);
                                                 const choreLabel = targetChore ? targetChore.label.split(' ')[0] : ex.chore_code;

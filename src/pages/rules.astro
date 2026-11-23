@@ -282,6 +282,39 @@ const schedule = await getRollSchedule(db);
       </div>
     </section>
 
+    <!-- Dados al piso -->
+    <section
+      class="bg-white border border-lutvia-amarillo/50 p-8 md:p-10 rounded-3xl shadow-lg relative overflow-hidden group animate-in fade-in slide-in-from-bottom-4 duration-500 delay-300 ease-out hover-card-lift"
+      aria-labelledby="dados-al-piso-titulo"
+    >
+      <div class="relative z-10 text-center md:text-left flex flex-col md:flex-row items-center gap-8">
+        <div class="text-7xl group-hover:translate-y-2 group-hover:rotate-12 transition-transform duration-500" aria-hidden="true">🫣</div>
+        <div>
+          <h3 id="dados-al-piso-titulo" class="text-2xl font-black text-foreground mb-2 text-balance">
+            Se cayeron los dados al piso
+          </h3>
+          <p class="text-foreground/80 leading-relaxed max-w-3xl text-pretty mb-4">
+            Pasa en las mejores mesas: <strong>una vez por día</strong>, a alguien se le va un
+            dado abajo de la mesa. Ese tiro no vale para nada y le toca <strong>tirar de
+            nuevo</strong> (y puede volver a elegir si va de culo).
+          </p>
+          <p class="inline-flex items-center justify-center md:justify-start gap-1.5 text-3xl mb-4">
+            <span class="sr-only">Por ejemplo, un tiro con tres dados en la mesa y el cuarto en el piso.</span>
+            <i class="fa-solid fa-dice-two text-foreground/40" aria-hidden="true"></i>
+            <i class="fa-solid fa-dice-five text-foreground/40" aria-hidden="true"></i>
+            <i class="fa-solid fa-dice-three text-foreground/40" aria-hidden="true"></i>
+            <span class="inline-block w-[1em] h-[1em] rounded-[0.2em] border-2 border-dashed border-foreground/25" aria-hidden="true"></span>
+          </p>
+          <p class="text-sm text-foreground/80 leading-relaxed max-w-3xl text-pretty">
+            Le puede tocar a cualquiera, con la misma chance para todos: cuanto más tarde tirás,
+            más probable es que el dado se escape, porque cada día se cae uno seguro. Si no tira
+            todo el mundo, capaz ese día se salvan todos. Queda la anécdota en el ranking, el
+            historial y Discord.
+          </p>
+        </div>
+      </div>
+    </section>
+
     <!-- Lomito -->
     <section
       class="bg-white border border-accent/30 p-8 md:p-10 rounded-3xl shadow-lg relative overflow-hidden group animate-in fade-in slide-in-from-bottom-4 duration-500 delay-300 ease-out hover-card-lift"

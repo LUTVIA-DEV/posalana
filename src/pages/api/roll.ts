@@ -3,7 +3,7 @@ import db from "../../db/index.js";
 import { finalDice, normalizeRoll, type Dice } from "../../utils/dice.js";
 import { sendDiscordDrop, sendDiscordRoll } from "../../utils/discord.js";
 import { devUnlimitedRolls } from "../../utils/dev.js";
-import { canDrop, claimDrop, dropChance } from "../../utils/drop.js";
+import { canDrop, claimDrop, getOrDrawDropTarget } from "../../utils/drop.js";
 import { getArgentinaNow, getNextPlayDay, getRollSchedule, getRollWindowStatus } from "../../utils/schedule.js";
 
 function rollDie() {
@@ -103,9 +103,9 @@ export async function POST(context: APIContext): Promise<Response> {
             await db.execute({ sql: "DELETE FROM dropped_roll WHERE date = ?", args: [dateStr] });
             drops = true;
         } else {
-            const schedule = await getRollSchedule(db);
-            const { chance } = await dropChance(db, userId, dateStr, minutes, schedule.end);
-            drops = chance > 0 && Math.random() < chance;
+            // El sorteo previo del día (secreto) dice a quién se le caen los dados en su primera tirada
+            const target = await getOrDrawDropTarget(db, dateStr);
+            drops = target === String(userId);
         }
         if (drops) {
             const raw: Dice = [d1, d2, d3, d4];

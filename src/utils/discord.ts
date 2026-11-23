@@ -101,7 +101,7 @@ export async function sendDiscordDrop(displayName: string, rawDice: Dice, vaDeCu
         .join(" - ");
     const embed = {
         title: "🫣 ¡Se cayeron los dados al piso!",
-        description: `**${displayName}** tiró con tantas ganas que un dado rodó abajo de la mesa:\n👉 **${shown}**${vaDeCulo ? " 🍑" : ""}\n\n🧹 *Ese tiro no vale: ${displayName} tiene que tirar de nuevo.* Pasa una vez por día y le puede tocar a cualquiera.\n\n🔗 Mirá cómo viene la mesa en la [App de POSALANA](${SITE_URL}/)`,
+        description: `**${displayName}** tiró con tantas ganas que un dado rodó abajo de la mesa:\n👉 **${shown}**${vaDeCulo ? " 🍑" : ""}\n\n🧹 *Ese tiro no vale: ${displayName} tiene que tirar de nuevo.* Le puede tocar a cualquiera de la mesa.\n\n🔗 Mirá cómo viene la mesa en la [App de POSALANA](${SITE_URL}/)`,
         color: colorLutviaEntero("amarillo"),
         footer: { text: "POSALANA • Dados al piso 🫣" },
         timestamp: new Date().toISOString()

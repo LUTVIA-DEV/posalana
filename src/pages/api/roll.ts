@@ -103,7 +103,8 @@ export async function POST(context: APIContext): Promise<Response> {
             await db.execute({ sql: "DELETE FROM dropped_roll WHERE date = ?", args: [dateStr] });
             drops = true;
         } else {
-            const { chance } = await dropChance(db, userId, dateStr);
+            const schedule = await getRollSchedule(db);
+            const { chance } = await dropChance(db, userId, dateStr, minutes, schedule.end);
             drops = chance > 0 && Math.random() < chance;
         }
         if (drops) {

@@ -4,14 +4,14 @@ import { timeToMinutes } from "./schedule.js";
 
 /**
  * «Se cayeron los dados al piso» 🫣: cada día de juego se invalida un tiro, al azar
- * entre los que tiran, y casi seguro que pasa todos los días (≥ 99 % en la simulación).
+ * lo más parejo posible entre los que tiran, y pasa casi todos los días.
  *
  * - **Sorteo por orden de llegada:** el k-ésimo jugador en tirar (contando solo las
  *   primeras tiradas de cada uno) se cae con probabilidad 1 / (N − k + 1). Con N
  *   tiradas, cada una de las primeras N tiene la misma chance (1/N) y la N-ésima se cae seguro.
  * - **N = asistencia habitual:** cuántos jugadores distintos suelen tirar, sacado de los
  *   últimos `ATTENDANCE_DAYS` días con tiradas: el percentil `ATTENDANCE_PERCENTILE`
- *   (bajo, para que casi siempre lleguen N tiradas). Sin historial suficiente se usa la
+ *   (la mediana, que reparte parejo entre los que tiran). Sin historial suficiente se usa la
  *   cantidad de activos de los últimos `ACTIVE_DAYS` días.
  * - **Red de seguridad:** desde `SAFETY_MINUTES` antes del cierre (`roll_window_end`),
  *   si todavía no se cayó nadie, la próxima primera tirada se cae seguro.
@@ -24,7 +24,7 @@ import { timeToMinutes } from "./schedule.js";
 
 export const ACTIVE_DAYS = 30;
 export const ATTENDANCE_DAYS = 20;
-export const ATTENDANCE_PERCENTILE = 0.1;
+export const ATTENDANCE_PERCENTILE = 0.5;
 export const MIN_ATTENDANCE_SAMPLES = 5;
 export const SAFETY_MINUTES = 30;
 export const DROPPED_DIE_INDEX = 3;
@@ -50,7 +50,7 @@ function percentile(values: number[], p: number) {
 }
 
 /**
- * Asistencia habitual (N): percentil bajo de jugadores distintos por día en los
+ * Asistencia habitual (N): mediana de jugadores distintos por día en los
  * últimos días con tiradas, sin contar hoy.
  */
 export async function typicalAttendance(db: Client, dateStr: string): Promise<number> {

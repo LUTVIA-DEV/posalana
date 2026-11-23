@@ -54,5 +54,5 @@ def run(p, days=40000, window=20):
     print(f"p{int(p * 100)}: días con caída {drops / days * 100:.2f}% | por llegada {pos} | por jugador {pl}")
 
 
-for p in (0.1, 0.2, 0.5):
+for p in (0.5, 0.2, 0.1):
     run(p)

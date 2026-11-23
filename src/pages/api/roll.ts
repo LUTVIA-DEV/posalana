@@ -2,6 +2,7 @@ import type { APIContext } from "astro";
 import db from "../../db/index.js";
 import { finalDice, normalizeRoll, type Dice } from "../../utils/dice.js";
 import { sendDiscordRoll } from "../../utils/discord.js";
+import { devUnlimitedRolls } from "../../utils/dev.js";
 import { getArgentinaNow, getNextPlayDay, getRollSchedule, getRollWindowStatus } from "../../utils/schedule.js";
 
 function rollDie() {
@@ -20,7 +21,10 @@ export async function POST(context: APIContext): Promise<Response> {
 
     // Solo se puede tirar los días de juego y dentro del horario oficial (el tester
     // queda afuera de esta regla para poder probar la Cláusula Lomito cuando quiera).
-    if (context.locals.user?.role !== 'tester') {
+    // En local, con DEV_UNLIMITED_ROLLS=1, no hay fecha, horario ni tirada única.
+    const unlimited = devUnlimitedRolls();
+
+    if (context.locals.user?.role !== 'tester' && !unlimited) {
         const schedule = await getRollSchedule(db);
         const status = getRollWindowStatus(schedule, minutes, dateStr);
         if (status === "no-play") {
@@ -43,7 +47,11 @@ export async function POST(context: APIContext): Promise<Response> {
     });
 
     if (existing.rows.length > 0) {
-        return new Response("Ya tiraste los dados hoy", { status: 400 });
+        if (!unlimited) {
+            return new Response("Ya tiraste los dados hoy", { status: 400 });
+        }
+        // Modo desarrollo: la tirada nueva reemplaza la de hoy
+        await db.execute({ sql: "DELETE FROM roll WHERE user_id = ? AND date = ?", args: [userId, dateStr] });
     }
 
     // «Va de culo» 🍑: se canta antes de tirar (viene en el pedido) y el servidor da vuelta los dados.

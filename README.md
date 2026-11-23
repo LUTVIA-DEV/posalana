@@ -84,6 +84,7 @@ POSALANA corre en el VPS del foro de Lutvia, con [Coolify](https://coolify.io/),
   - `DISCORD_WEBHOOK_URL`: el webhook del canal de Discord.
   - `CRON_SECRET`: un texto secreto que protege `/api/cron/verdict`.
   - `DATABASE_URL` ya viene en el `Dockerfile` (`file:/data/posalana.db`).
+- **Herramienta de desarrollo:** `DEV_UNLIMITED_ROLLS=1` deja tirar sin restricción de fecha ni horario y las veces que quieras (cada tirada reemplaza la tuya del día). Es solo para probar en local, por ejemplo con `docker run -e DEV_UNLIMITED_ROLLS=1 …`; **nunca se define en producción**.
 - **Veredicto automático:** sale solo a la hora del cierre: el servidor lo revisa cada minuto. Una tarea programada de Coolify llama además a `/api/cron/verdict` a las 16:00 UTC (13:00 de Argentina), como respaldo.
 - **Pendientes de la mudanza y del proyecto:** en [`docs/pendientes.md`](docs/pendientes.md).
 

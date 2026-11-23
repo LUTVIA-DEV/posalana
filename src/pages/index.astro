@@ -7,6 +7,7 @@ import DiceDisplay from '../components/DiceDisplay.astro';
 import ScheduleNotice from '../components/ScheduleNotice.astro';
 import { formatDate } from '../utils/date.js';
 import { normalizeRoll } from '../utils/dice.js';
+import { devUnlimitedRolls } from '../utils/dev.js';
 import { getArgentinaNow, getNextPlayDay, getRollSchedule, getRollWindowStatus, SCHEDULE_NOTICE_UNTIL } from '../utils/schedule.js';
 
 if (!Astro.locals.user) {
@@ -21,7 +22,9 @@ const dateStr = now.dateStr;
 const schedule = await getRollSchedule(db);
 const windowStatus = getRollWindowStatus(schedule, now.minutes, dateStr);
 const nextPlay = getNextPlayDay(schedule, dateStr);
-const canRoll = windowStatus === 'open' || user.role === 'tester';
+// Modo desarrollo (DEV_UNLIMITED_ROLLS=1, solo en local): se tira siempre y las veces que quieras
+const unlimitedRolls = devUnlimitedRolls();
+const canRoll = windowStatus === 'open' || user.role === 'tester' || unlimitedRolls;
 const showScheduleNotice = dateStr <= SCHEDULE_NOTICE_UNTIL;
 
 // Check if user rolled
@@ -201,8 +204,9 @@ const savedPlayers = sortedRolls.filter(r => rollChoreMap.get(r.id)?.code === 'N
                     <DiceDisplay die1={myRoll.die1 as number} die2={myRoll.die2 as number} die3={myRoll.die3 as number} die4={myRoll.die4 as number} raw={myRoll.raw_dice} vaDeCulo={myRoll.va_de_culo} size="lg" />
                 </div>
             </section>
-        ) : (
-            <section class="relative bg-white border border-foreground/10 p-8 md:p-12 rounded-3xl shadow-xl overflow-hidden text-center group animate-in fade-in slide-in-from-bottom-4 duration-500 delay-150 ease-out hover-card-lift">
+        ) : null}
+        {(!hasRolled || unlimitedRolls) && (
+            <section class:list={["relative bg-white border border-foreground/10 p-8 md:p-12 rounded-3xl shadow-xl overflow-hidden text-center group animate-in fade-in slide-in-from-bottom-4 duration-500 delay-150 ease-out hover-card-lift", hasRolled && "mt-4"]}>
                 <!-- Decorative Background Element -->
                 <div class="absolute -top-24 -right-24 w-64 h-64 bg-secondary/10 rounded-pildora blur-3xl group-hover:bg-secondary/20 transition-all duration-700 pointer-events-none"></div>
                 <div class="absolute -bottom-24 -left-24 w-64 h-64 bg-accent/10 rounded-pildora blur-3xl group-hover:bg-accent/20 transition-all duration-700 pointer-events-none"></div>
@@ -284,6 +288,9 @@ const savedPlayers = sortedRolls.filter(r => rollChoreMap.get(r.id)?.code === 'N
                             <span class="text-sm text-foreground/60 font-medium">Volvé {nextPlay.label} de {schedule.start} a {schedule.end}</span>
                         </div>
                     </>
+                    )}
+                    {unlimitedRolls && (
+                        <p class="mt-6 text-[10px] font-bold uppercase tracking-widest text-foreground/40"><i class="fa-solid fa-flask mr-1" aria-hidden="true"></i> Modo desarrollo: tiradas sin límite</p>
                     )}
                 </div>
             </section>

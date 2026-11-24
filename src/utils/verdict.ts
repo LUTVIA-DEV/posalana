@@ -20,7 +20,7 @@ export async function publishDailyVerdict(
 
     const allRollsRes = await db.execute({
         sql: `
-            SELECT r.*, u.username, u.display_name, u.avatar_url
+            SELECT r.*, r.rowid AS roll_seq, u.username, u.display_name, u.avatar_url
             FROM roll r
             JOIN user u ON r.user_id = u.id
             WHERE r.date = ?

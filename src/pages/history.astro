@@ -14,7 +14,7 @@ if (!Astro.locals.user) {
 
 // Get all rolls ordered by date descending, then by die scores ascending
 const allRollsRes = await db.execute(`
-    SELECT r.*, u.username, u.display_name, u.avatar_url 
+    SELECT r.*, r.rowid AS roll_seq, u.username, u.display_name, u.avatar_url 
     FROM roll r
     JOIN user u ON r.user_id = u.id
     ORDER BY r.date DESC

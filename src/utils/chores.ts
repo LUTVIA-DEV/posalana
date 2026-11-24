@@ -21,7 +21,12 @@ export function assignDailyChores(dailyRolls: any[], exemptions: any[]) {
         const d4a = Number(a.die4), d4b = Number(b.die4);
         if (d4a !== d4b) return d4a - d4b;
         
-        // fallback to insertion order or id to keep stable sort
+        // Empate exacto (Cláusula Lomito): si les toca tarea, la hace el que tiró último.
+        // `roll_seq` es el rowid de la tirada (orden de inserción); sin él, la hora y después el id.
+        const seqA = Number(a.roll_seq), seqB = Number(b.roll_seq);
+        if (Number.isFinite(seqA) && Number.isFinite(seqB) && seqA !== seqB) return seqB - seqA;
+        const timeA = String(a.time ?? ""), timeB = String(b.time ?? "");
+        if (timeA !== timeB) return timeB.localeCompare(timeA);
         return String(a.id).localeCompare(String(b.id));
     });
 

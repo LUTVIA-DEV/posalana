@@ -132,6 +132,10 @@ const schedule = await getRollSchedule(db);
               En caso de empate, desempata el 2º dado, y así sucesivamente.
             </li>
             <li>
+              Si los 4 dados son iguales (Cláusula Lomito 🥪) y a los empatados les toca
+              tarea, la hace <strong>el que tiró último</strong>.
+            </li>
+            <li>
               Se juega <strong>martes, miércoles y jueves</strong>. Lunes,
               viernes y fines de semana no se tira, salvo que el admin habilite
               una tirada especial ese día.

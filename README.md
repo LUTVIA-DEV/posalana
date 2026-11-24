@@ -91,7 +91,7 @@ POSALANA corre en el VPS del foro de Lutvia, con [Coolify](https://coolify.io/),
 
 ## 📜 Reglas del Juego
 
-Las reglas oficiales de POSALANA están publicadas dentro de la misma aplicación, actualizadas por última vez el **20 de Noviembre de 2026** (llegó «va de culo» 🍑). Podés consultarlas en la pestaña "Reglas" en el menú principal de navegación.
+Las reglas oficiales de POSALANA están publicadas dentro de la misma aplicación, actualizadas por última vez el **24 de Noviembre de 2026** (llegaron «va de culo» 🍑 y «se cayó un dado al piso» 🚫). Podés consultarlas en la pestaña "Reglas" en el menú principal de navegación.
 
 ---
 *Hecho con ❤️ y algo de suerte en los dados.*

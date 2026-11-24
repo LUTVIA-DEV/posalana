@@ -2,9 +2,12 @@
 import Layout from "../layouts/Layout.astro";
 import TrailerVideo from "../components/TrailerVideo.astro";
 import db from "../db/index.js";
-import { getRollSchedule } from "../utils/schedule.js";
+import { getArgentinaNow, getRollSchedule } from "../utils/schedule.js";
+import { getDropProbability } from "../utils/drop.js";
 
 const schedule = await getRollSchedule(db);
+// «Dado al piso» 🚫: chance por tirada de hoy (la automática o la que fijó el admin)
+const dropPct = Math.round((await getDropProbability(db, getArgentinaNow().dateStr)) * 100);
 ---
 
 <Layout>
@@ -25,7 +28,7 @@ const schedule = await getRollSchedule(db);
       <p
         class="text-xs text-foreground/40 mt-4 uppercase tracking-widest font-bold"
       >
-        Última actualización: 13 Oct 2026
+        Última actualización: 24 Nov 2026
       </p>
     </section>
 
@@ -130,6 +133,14 @@ const schedule = await getRollSchedule(db);
             </li>
             <li>
               En caso de empate, desempata el 2º dado, y así sucesivamente.
+            </li>
+            <li>
+              Antes de tirar podés cantar <strong>«va de culo» 🍑</strong> y los dados se
+              leen dados vuelta (ver más abajo).
+            </li>
+            <li>
+              A veces <strong>se cae un dado al piso 🚫</strong>: ese tiro no vale y tirás de
+              nuevo (ver más abajo).
             </li>
             <li>
               Si los 4 dados son iguales (Cláusula Lomito 🥪) y a los empatados les toca
@@ -278,9 +289,10 @@ const schedule = await getRollSchedule(db);
           </p>
           <p class="text-sm text-foreground/80 leading-relaxed max-w-3xl text-pretty">
             Para todo cuenta el <strong>tiro dado vuelta</strong>: quién lava, saca o pone, la
-            Cláusula Lomito y las estadísticas. En el ranking, el historial y Discord se ven
-            los dos. ¿Cambia las probabilidades? Ni un poquito. ¿Da más suerte? Preguntale a
-            tu abuela.
+            Cláusula Lomito y las estadísticas. En la app se ven los dos: arriba, grande, el
+            que cuenta, y abajo, en chico, el real con el 🍑 (en el podio, el 🍑 va como
+            badge sobre la foto). En Discord también se anuncia. ¿Cambia las probabilidades?
+            Ni un poquito. ¿Da más suerte? Preguntale a tu abuela.
           </p>
         </div>
       </div>
@@ -311,9 +323,15 @@ const schedule = await getRollSchedule(db);
           </p>
           <p class="text-sm text-foreground/80 leading-relaxed max-w-3xl text-pretty">
             Se decide en el momento: en tu primera tirada del día tenés la misma chance que
-            cualquiera de que se te escape un dado, tires primero o último. Le puede pasar a varios
-            el mismo día, o a nadie, pero a vos no dos veces. Queda la anécdota en el ranking, el
-            historial y Discord.
+            cualquiera de que se te escape un dado (hoy, <strong class="tabular-nums">{dropPct} %</strong>),
+            tires primero o último. Le puede pasar a varios el mismo día, o a nadie, pero a vos
+            no dos veces: el re-tiro siempre vale.
+          </p>
+          <p class="text-sm text-foreground/80 leading-relaxed max-w-3xl text-pretty mt-3">
+            Queda la anécdota: en la app, abajo del tiro que vale se ve el que se cayó, con sus
+            3 dados, el hueco y el 🚫 (en el podio, el 🚫 va como badge sobre la foto), y en
+            Discord sale un aviso apenas se cae. Si cantaste «va de culo» y encima se te cayó un
+            dado, se ven las dos cosas; el re-tiro es una tirada nueva y podés cantarla o no.
           </p>
         </div>
       </div>

@@ -60,7 +60,9 @@ const historyData = dates.map(date => {
         lomitoActivated,
         lomitoPlayers,
         exemptions: seasonExemptions,
-        drops: dropsByDate.get(date) ?? []
+        drops: dropsByDate.get(date) ?? [],
+        // Caídas de jugadores que ese día no volvieron a tirar (las demás se ven en su fila)
+        pendingDrops: (dropsByDate.get(date) ?? []).filter(d => !sortedRolls.some(r => String(r.user_id) === String(d.user_id)))
     };
 });
 
@@ -369,12 +371,12 @@ const currentSeasonExemptions = await getExemptionsForSeason(db, currentSeasonId
                                             </div>
                                         )}
 
-                                        {data.drops.length > 0 && (
+                                        {data.pendingDrops.length > 0 && (
                                             <div class="mb-4 pl-6 md:pl-10 relative z-10">
                                                 <div class="inline-flex flex-col gap-1 bg-lutvia-amarillo/10 border border-lutvia-amarillo/40 px-4 py-2 rounded-chico text-sm text-foreground/70 font-medium">
-                                                    <span><span aria-hidden="true">🫣</span> A <strong class="text-foreground">{joinNames(data.drops.map(d => String(d.display_name || d.username)))}</strong> {data.drops.length === 1 ? "se le cayó un dado al piso y tuvo" : "se les cayeron dados al piso y tuvieron"} que tirar de nuevo</span>
+                                                    <span><span aria-hidden="true">🫣</span> A <strong class="text-foreground">{joinNames(data.pendingDrops.map(d => String(d.display_name || d.username)))}</strong> {data.pendingDrops.length === 1 ? "se le cayeron los dados y no volvió" : "se les cayeron los dados y no volvieron"} a tirar</span>
                                                     <span class="flex flex-wrap items-center gap-x-3 gap-y-1">
-                                                        {data.drops.map(d => (
+                                                        {data.pendingDrops.map(d => (
                                                             <DroppedDice dice={[d.die1, d.die2, d.die3, d.die4]} vaDeCulo={d.va_de_culo} size="sm" />
                                                         ))}
                                                     </span>
@@ -388,6 +390,9 @@ const currentSeasonExemptions = await getExemptionsForSeason(db, currentSeasonId
                                                 const chore = data.choreMap.get(roll.id);
                                                 const isSafe = chore.code === "NA";
                                                 const userExemptions = (data.exemptions || []).filter(e => String(e.user_id) === String(roll.user_id));
+                                                // Tiro caído de este jugador ese día (se ve abajo, como «va de culo»)
+                                                const drop = data.drops.find(d => String(d.user_id) === String(roll.user_id));
+                                                const dropProps = drop ? { dropped: [drop.die1, drop.die2, drop.die3, drop.die4], droppedVaDeCulo: drop.va_de_culo } : {};
                                                 return (
                                                     <div class={`group flex flex-row items-center justify-between p-4 rounded-chico border transition-all duration-300 hover:shadow-md hover:-translate-y-0.5 ${isSafe ? 'bg-white border-foreground/10 hover:border-secondary/30' : 'bg-white border-primary/20 hover:border-primary/40'}`}>
                                                         
@@ -414,8 +419,14 @@ const currentSeasonExemptions = await getExemptionsForSeason(db, currentSeasonId
                                                                     <span class="sr-only">Fue de culo: tiro real {roll.raw_dice.join(", ")}, definitivo {[roll.die1, roll.die2, roll.die3, roll.die4].join(", ")}.</span>
                                                                 </span>
                                                             )}
+                                                            {drop && (
+                                                                <span class="sm:hidden text-xs font-bold text-foreground/60 whitespace-nowrap" title="Se le cayeron los dados y tuvo que tirar de nuevo">
+                                                                    <span aria-hidden="true">🫣</span>
+                                                                    <span class="sr-only">Se le cayeron los dados y tuvo que tirar de nuevo.</span>
+                                                                </span>
+                                                            )}
                                                             <div class="hidden sm:flex items-center opacity-70 group-hover:opacity-100 transition-opacity">
-                                                                <DiceDisplay die1={roll.die1 as number} die2={roll.die2 as number} die3={roll.die3 as number} die4={roll.die4 as number} raw={roll.raw_dice} vaDeCulo={roll.va_de_culo} size="sm" isSafe={isSafe} />
+                                                                <DiceDisplay die1={roll.die1 as number} die2={roll.die2 as number} die3={roll.die3 as number} die4={roll.die4 as number} raw={roll.raw_dice} vaDeCulo={roll.va_de_culo} {...dropProps} size="sm" isSafe={isSafe} />
                                                             </div>
                                                             <div class={`px-3 py-1 rounded-chico text-xs font-black tracking-widest ${isSafe ? 'bg-secondary text-background' : 'bg-primary text-background shadow-[0_0_10px_rgba(234,42,88,0.3)]'}`}>
                                                                 {chore.code}

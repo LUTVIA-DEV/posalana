@@ -3,7 +3,7 @@ import db from "../../db/index.js";
 import { finalDice, normalizeRoll, type Dice } from "../../utils/dice.js";
 import { sendDiscordDrop, sendDiscordRoll } from "../../utils/discord.js";
 import { devUnlimitedRolls } from "../../utils/dev.js";
-import { canDrop, claimDrop, getDropProbability, hasUserDropToday } from "../../utils/drop.js";
+import { canDrop, claimDrop, getDropProbability, getDropsForDate, hasUserDropToday } from "../../utils/drop.js";
 import { getArgentinaNow, getNextPlayDay, getRollSchedule, getRollWindowStatus } from "../../utils/schedule.js";
 
 function rollDie() {
@@ -168,7 +168,10 @@ export async function POST(context: APIContext): Promise<Response> {
     }
 
     // Send Discord notification asynchronously (don't block the redirect)
-    sendDiscordRoll(displayName, rawDice, vaDeCulo, discordLomitoActivated, discordLomitoPlayers).catch(err => {
+    // Si es el re-tiro después de que se le cayeron los dados, el mensaje muestra también el caído
+    const myDrop = (await getDropsForDate(db, dateStr)).find(d => String(d.user_id) === String(userId));
+    const droppedForDiscord = myDrop ? { dice: [myDrop.die1, myDrop.die2, myDrop.die3, myDrop.die4], vaDeCulo: myDrop.va_de_culo } : null;
+    sendDiscordRoll(displayName, rawDice, vaDeCulo, discordLomitoActivated, discordLomitoPlayers, droppedForDiscord).catch(err => {
         console.error("Error trigger sending Discord roll:", err);
     });
 

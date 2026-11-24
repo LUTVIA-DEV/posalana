@@ -52,12 +52,19 @@ const allRolls = allRollsRes.rows.map(normalizeRoll);
 
 // «Se cayeron los dados al piso» 🫣: los tiros invalidados de hoy (pueden ser varios) y si uno fue el tuyo
 const todayDrops = await getDropsForDate(db, dateStr);
-const droppedUserIds = new Set(todayDrops.map(d => String(d.user_id)));
 const rolledUserIds = new Set(allRolls.map(r => String(r.user_id)));
 const myDrop = todayDrops.find(d => String(d.user_id) === String(user.id)) ?? null;
 // Recién se cayó (venís del redirect de /api/roll): el dado se cae con animación
 const justDropped = !!myDrop && !hasRolled && Astro.url.searchParams.get('caida') === '1';
 const dropDice = (d: (typeof todayDrops)[number]) => [d.die1, d.die2, d.die3, d.die4] as number[];
+// Props de DiceDisplay para mostrar el tiro caído de un jugador (igual que «va de culo»)
+const dropByUser = new Map(todayDrops.map(d => [String(d.user_id), d]));
+const dropProps = (userId: unknown) => {
+    const d = dropByUser.get(String(userId));
+    return d ? { dropped: dropDice(d), droppedVaDeCulo: d.va_de_culo } : {};
+};
+// Caídas que todavía esperan el re-tiro (esas no tienen fila en el ranking)
+const pendingDrops = todayDrops.filter(d => !rolledUserIds.has(String(d.user_id)));
 
 const chores = [
     { label: "Lava los platos", code: "LA", emoji: "🧽" },
@@ -108,7 +115,7 @@ const savedPlayers = sortedRolls.filter(r => rollChoreMap.get(r.id)?.code === 'N
 
                             <!-- Dice Roll -->
                             <div class="mt-2 flex justify-center">
-                                <DiceDisplay die1={assignedPO.die1 as number} die2={assignedPO.die2 as number} die3={assignedPO.die3 as number} die4={assignedPO.die4 as number} vaDeCulo={assignedPO.va_de_culo} size="sm" color="text-primary" />
+                                <DiceDisplay die1={assignedPO.die1 as number} die2={assignedPO.die2 as number} die3={assignedPO.die3 as number} die4={assignedPO.die4 as number} vaDeCulo={assignedPO.va_de_culo} {...dropProps(assignedPO.user_id)} compact size="sm" color="text-primary" />
                             </div>
 
                             <span class="font-black text-foreground text-xs sm:text-sm mt-2 block text-center leading-tight px-1">{assignedPO.display_name}</span>
@@ -137,7 +144,7 @@ const savedPlayers = sortedRolls.filter(r => rollChoreMap.get(r.id)?.code === 'N
                             
                             <!-- Dice Roll -->
                             <div class="mt-2 flex justify-center">
-                                <DiceDisplay die1={assignedSA.die1 as number} die2={assignedSA.die2 as number} die3={assignedSA.die3 as number} die4={assignedSA.die4 as number} vaDeCulo={assignedSA.va_de_culo} size="sm" color="text-secondary" />
+                                <DiceDisplay die1={assignedSA.die1 as number} die2={assignedSA.die2 as number} die3={assignedSA.die3 as number} die4={assignedSA.die4 as number} vaDeCulo={assignedSA.va_de_culo} {...dropProps(assignedSA.user_id)} compact size="sm" color="text-secondary" />
                             </div>
 
                             <span class="font-black text-foreground text-xs sm:text-sm mt-2 block text-center leading-tight px-1">{assignedSA.display_name}</span>
@@ -166,7 +173,7 @@ const savedPlayers = sortedRolls.filter(r => rollChoreMap.get(r.id)?.code === 'N
 
                             <!-- Dice Roll -->
                             <div class="mt-2 flex justify-center">
-                                <DiceDisplay die1={assignedLA.die1 as number} die2={assignedLA.die2 as number} die3={assignedLA.die3 as number} die4={assignedLA.die4 as number} vaDeCulo={assignedLA.va_de_culo} size="sm" color="text-accent" />
+                                <DiceDisplay die1={assignedLA.die1 as number} die2={assignedLA.die2 as number} die3={assignedLA.die3 as number} die4={assignedLA.die4 as number} vaDeCulo={assignedLA.va_de_culo} {...dropProps(assignedLA.user_id)} compact size="sm" color="text-accent" />
                             </div>
 
                             <span class="font-black text-foreground text-xs sm:text-sm mt-2 block text-center leading-tight px-1">{assignedLA.display_name}</span>
@@ -209,16 +216,10 @@ const savedPlayers = sortedRolls.filter(r => rollChoreMap.get(r.id)?.code === 'N
                 <div class="text-center sm:text-left mb-4 sm:mb-0">
                     <p class="text-secondary font-bold tracking-widest uppercase text-[10px] mb-1">Tirada del {formatDate(dateStr)}</p>
                     <p class="text-sm text-foreground/80 font-medium">Ya cumpliste con tu destino de hoy.</p>
-                    {myDrop && (
-                        <p class="mt-1 inline-flex items-center gap-1.5 text-xs text-foreground/50 font-medium">
-                            <span aria-hidden="true">🫣</span> Tu primer tiro se cayó al piso:
-                            <DroppedDice dice={dropDice(myDrop)} vaDeCulo={myDrop.va_de_culo} size="sm" />
-                        </p>
-                    )}
                 </div>
                 <div class="flex items-center gap-3 bg-secondary/5 border border-secondary/20 px-4 py-2 rounded-chico shadow-inner">
                     <p class="text-xs text-secondary font-bold uppercase tracking-wider mr-2 hidden md:block">Tu Suerte:</p>
-                    <DiceDisplay die1={myRoll.die1 as number} die2={myRoll.die2 as number} die3={myRoll.die3 as number} die4={myRoll.die4 as number} raw={myRoll.raw_dice} vaDeCulo={myRoll.va_de_culo} size="lg" />
+                    <DiceDisplay die1={myRoll.die1 as number} die2={myRoll.die2 as number} die3={myRoll.die3 as number} die4={myRoll.die4 as number} raw={myRoll.raw_dice} vaDeCulo={myRoll.va_de_culo} {...dropProps(user.id)} size="lg" />
                 </div>
             </section>
         ) : null}
@@ -376,18 +377,15 @@ const savedPlayers = sortedRolls.filter(r => rollChoreMap.get(r.id)?.code === 'N
                     <i class="fa-solid fa-trophy text-secondary"></i> Ranking POSALANA
                 </h3>
             </div>
-            {todayDrops.length > 0 && (
-                <div class="-mt-4 mb-6 text-sm text-foreground/60 font-medium bg-lutvia-amarillo/10 border border-lutvia-amarillo/40 rounded-chico px-4 py-2">
-                    <p class="font-black text-foreground/70 mb-1"><span aria-hidden="true">🫣</span> {todayDrops.length === 1 ? "Hoy se cayeron dados al piso" : `Hoy se cayeron dados al piso ${todayDrops.length} veces`}</p>
-                    <ul class="flex flex-col gap-1">
-                        {todayDrops.map(d => (
-                            <li class="flex flex-wrap items-center gap-x-2 gap-y-1">
-                                <span>A <strong class="text-foreground">{d.display_name || d.username}</strong>{rolledUserIds.has(String(d.user_id)) ? ", que volvió a tirar" : ", que tiene que tirar de nuevo"}</span>
-                                <DroppedDice dice={dropDice(d)} vaDeCulo={d.va_de_culo} size="sm" />
-                            </li>
-                        ))}
-                    </ul>
-                </div>
+            {pendingDrops.length > 0 && (
+                <ul class="-mt-4 mb-6 flex flex-col gap-1 text-sm text-foreground/60 font-medium bg-lutvia-amarillo/10 border border-lutvia-amarillo/40 rounded-chico px-4 py-2">
+                    {pendingDrops.map(d => (
+                        <li class="flex flex-wrap items-center gap-x-2 gap-y-1">
+                            <span><span aria-hidden="true">🫣</span> A <strong class="text-foreground">{d.display_name || d.username}</strong> se le cayeron los dados: tiene que tirar de nuevo</span>
+                            <DroppedDice dice={dropDice(d)} vaDeCulo={d.va_de_culo} size="sm" />
+                        </li>
+                    ))}
+                </ul>
             )}
             
             {allRolls.length === 0 ? (
@@ -450,11 +448,6 @@ const savedPlayers = sortedRolls.filter(r => rollChoreMap.get(r.id)?.code === 'N
                                             <span class={`inline-block text-[10px] uppercase tracking-widest font-bold px-2 py-0.5 rounded-pildora ${config.badge}`}>
                                                 {chore.code}
                                             </span>
-                                            {droppedUserIds.has(String(roll.user_id)) && (
-                                                <span class="inline-flex items-center gap-1 text-[9px] font-black tracking-wider uppercase bg-lutvia-amarillo/20 text-foreground/70 border border-lutvia-amarillo/50 px-2 py-0.5 rounded-chico" title="Su primer tiro se cayó al piso y tuvo que tirar de nuevo">
-                                                    <span aria-hidden="true">🫣</span> Volvió a tirar
-                                                </span>
-                                            )}
                                             {userExemptions.map(ex => {
                                                 const targetChore = chores.find(c => c.code === ex.chore_code);
                                                 const choreLabel = targetChore ? targetChore.label.split(' ')[0] : ex.chore_code;
@@ -473,7 +466,7 @@ const savedPlayers = sortedRolls.filter(r => rollChoreMap.get(r.id)?.code === 'N
                                 </div>
 
                                 <div class="flex items-center justify-center sm:justify-end bg-white/50 sm:bg-transparent p-4 sm:p-0 rounded-chico w-full sm:w-auto mt-2 sm:mt-0">
-                                    <DiceDisplay die1={roll.die1 as number} die2={roll.die2 as number} die3={roll.die3 as number} die4={roll.die4 as number} raw={roll.raw_dice} vaDeCulo={roll.va_de_culo} size="xl" color={config.diceColor} />
+                                    <DiceDisplay die1={roll.die1 as number} die2={roll.die2 as number} die3={roll.die3 as number} die4={roll.die4 as number} raw={roll.raw_dice} vaDeCulo={roll.va_de_culo} {...dropProps(roll.user_id)} size="xl" color={config.diceColor} />
                                 </div>
                             </div>
                         )

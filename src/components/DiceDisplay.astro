@@ -1,4 +1,6 @@
 ---
+import DroppedDice from "./DroppedDice.astro";
+
 export interface Props {
     die1: number;
     die2: number;
@@ -13,12 +15,26 @@ export interface Props {
      */
     vaDeCulo?: boolean;
     raw?: number[];
+    /**
+     * «Se cayeron los dados al piso» 🫣: tiro definitivo del tiro que se cayó (ya normalizado).
+     * Los dados grandes son el re-tiro, que es el que vale, y abajo en chico va el caído
+     * (3 dados y el 4.º como hueco). Con `compact` se ve solo el 🫣 al lado.
+     */
+    dropped?: number[];
+    droppedVaDeCulo?: boolean;
+    /** Podio: sin líneas de abajo, solo los íconos (🍑, 🫣) al lado de los dados */
+    compact?: boolean;
 }
 
-const { die1, die2, die3, die4, isSafe, size = "md", color, vaDeCulo = false, raw } = Astro.props;
-const showRaw = vaDeCulo && Array.isArray(raw) && raw.length === 4;
+const { die1, die2, die3, die4, isSafe, size = "md", color, vaDeCulo = false, raw, dropped, droppedVaDeCulo = false, compact = false } = Astro.props;
+const showRaw = !compact && vaDeCulo && Array.isArray(raw) && raw.length === 4;
 const showPeachOnly = vaDeCulo && !showRaw;
+const hasDropped = Array.isArray(dropped) && dropped.length === 4;
+const showDropped = !compact && hasDropped;
+const showFellOnly = compact && hasDropped;
+const showLines = showRaw || showDropped;
 const finalText = [die1, die2, die3, die4].join(", ");
+const inlineTitle = [showPeachOnly && "Fue de culo", showFellOnly && "Se le cayeron los dados y tuvo que tirar de nuevo"].filter(Boolean).join(" · ") || undefined;
 
 const diceWords = ['one', 'two', 'three', 'four', 'five', 'six'];
 
@@ -31,6 +47,7 @@ const sizeClasses = {
     xl: "text-3xl sm:text-4xl md:text-5xl lg:text-6xl gap-3 sm:gap-4 lg:gap-6"
 };
 
+// Líneas chicas de abajo (tiro real de culo y tiro caído)
 const culoTextClasses = {
     sm: "text-xs",
     md: "text-sm",
@@ -41,8 +58,8 @@ const culoTextClasses = {
 const safeClass = color || (isSafe === undefined ? "text-secondary" : (isSafe ? "text-secondary" : "text-primary"));
 ---
 
-<div class={showRaw ? "flex flex-col items-center gap-1" : "contents"}>
-<div class={`flex items-center justify-center ${sizeClasses[size]}`} aria-hidden={showRaw ? "true" : undefined} title={showPeachOnly ? "Fue de culo" : undefined}>
+<div class={showLines ? "flex flex-col items-center gap-1" : "contents"}>
+<div class={`flex items-center justify-center ${sizeClasses[size]}`} aria-hidden={showLines ? "true" : undefined} title={inlineTitle}>
     <i class={`${getDieClass(die1)} ${safeClass} drop-shadow-sm animate-in fade-in zoom-in-95 duration-300 hover:scale-110 hover:rotate-6 transition-all duration-300 cursor-default`}></i>
     <i class={`${getDieClass(die2)} text-foreground/30 animate-in fade-in zoom-in-95 duration-300 delay-75 hover:scale-110 hover:-rotate-6 transition-all duration-300 cursor-default`}></i>
     <i class={`${getDieClass(die3)} text-foreground/30 animate-in fade-in zoom-in-95 duration-300 delay-150 hover:scale-110 hover:rotate-6 transition-all duration-300 cursor-default`}></i>
@@ -51,6 +68,10 @@ const safeClass = color || (isSafe === undefined ? "text-secondary" : (isSafe ? 
         <span aria-hidden="true" class="leading-none">🍑</span>
         <span class="sr-only">Fue de culo</span>
     </>)}
+    {showFellOnly && (<>
+        <span aria-hidden="true" class="leading-none">🫣</span>
+        <span class="sr-only">Se le cayeron los dados y tuvo que tirar de nuevo</span>
+    </>)}
 </div>
 {showRaw && (
     <p class={`inline-flex items-center gap-1 text-foreground/40 whitespace-nowrap ${culoTextClasses[size]}`} title="Fue de culo: arriba el tiro que cuenta, abajo el tiro real">
@@ -58,6 +79,15 @@ const safeClass = color || (isSafe === undefined ? "text-secondary" : (isSafe ? 
         <i class="fa-solid fa-arrow-up text-[0.75em] mr-0.5" aria-hidden="true"></i>
         <span aria-hidden="true">🍑</span>
         {raw!.map(v => <i class={getDieClass(v)} aria-hidden="true"></i>)}
+    </p>
+)}
+{showDropped && (
+    <p class={`inline-flex items-center gap-1 text-foreground/40 whitespace-nowrap ${culoTextClasses[size]}`} title="Se le cayeron los dados: arriba el tiro que vale, abajo el que se cayó al piso">
+        {!showRaw && <span class="sr-only">Tiro que vale: {finalText}.</span>}
+        <span class="sr-only">Antes se le cayeron los dados al piso.</span>
+        <i class="fa-solid fa-rotate-left text-[0.75em] mr-0.5" aria-hidden="true"></i>
+        <span aria-hidden="true">🫣</span>
+        <DroppedDice dice={dropped!} vaDeCulo={droppedVaDeCulo} size="inherit" />
     </p>
 )}
 </div>

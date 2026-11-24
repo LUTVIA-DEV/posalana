@@ -7,7 +7,7 @@ import { getSeasonId, getPreviousSeasons, formatSeasonName } from "../utils/seas
 import { getArgentinaNow, getRollSchedule, getRollWindowStatus } from "../utils/schedule.js";
 import { formatDate } from "../utils/date.js";
 import { normalizeRoll } from "../utils/dice.js";
-import { DROP_PROBABILITY_KEY, P_MAX, P_MIN, defaultDropProbability } from "../utils/drop.js";
+import { DROP_PROBABILITY_KEY, P_MAX, P_MIN, defaultDropProbability, getDropsBetween } from "../utils/drop.js";
 
 const { user } = Astro.locals;
 
@@ -30,13 +30,20 @@ const allExemptions = exemptionsRes.rows;
 
 // Fetch all rolls
 const rollsRes = await db.execute(`
-	SELECT r.id, r.date, r.die1, r.die2, r.die3, r.die4, r.va_de_culo, u.username, u.display_name, u.avatar_url 
+	SELECT r.id, r.user_id, r.date, r.die1, r.die2, r.die3, r.die4, r.va_de_culo, u.username, u.display_name, u.avatar_url 
 	FROM roll r 
 	JOIN user u ON r.user_id = u.id 
 	ORDER BY r.date DESC, r.id DESC
 	LIMIT 50
 `);
 const recentRolls = rollsRes.rows.map(normalizeRoll);
+// «Dados al piso» 🫣: tiros caídos de esos días, para mostrarlos abajo de cada re-tiro
+const recentDates = recentRolls.map(r => String(r.date)).sort();
+const recentDrops = recentDates.length > 0 ? await getDropsBetween(db, recentDates[0], recentDates[recentDates.length - 1]) : new Map();
+const adminDropProps = (r: { date: unknown; user_id: unknown }) => {
+    const d = (recentDrops.get(String(r.date)) ?? []).find((x: any) => String(x.user_id) === String(r.user_id));
+    return d ? { dropped: [d.die1, d.die2, d.die3, d.die4], droppedVaDeCulo: d.va_de_culo } : {};
+};
 
 // Fetch recent password resets
 const resetsRes = await db.execute(`
@@ -441,7 +448,7 @@ uniqueSeasons.sort((a, b) => {
                                         </div>
                                     </td>
                                     <td class="p-4">
-                                        <DiceDisplay die1={r.die1 as number} die2={r.die2 as number} die3={r.die3 as number} die4={r.die4 as number} raw={r.raw_dice} vaDeCulo={r.va_de_culo} size="md" />
+                                        <DiceDisplay die1={r.die1 as number} die2={r.die2 as number} die3={r.die3 as number} die4={r.die4 as number} raw={r.raw_dice} vaDeCulo={r.va_de_culo} {...adminDropProps(r)} size="md" />
                                     </td>
                                     <td class="p-4 text-right">
                                         <form method="post" action="/api/admin/delete-roll" onsubmit={`return confirm('⚠️ ¿Alterar el destino y anular la tirada de ${r.username}?')`}>

@@ -1,6 +1,6 @@
 import { colorLutviaEntero } from "./tokens.js";
 import { finalDice, type Dice } from "./dice.js";
-import { DROPPED_DIE_INDEX, joinNames } from "./drop.js";
+import { formatDroppedText, joinNames } from "./drop.js";
 
 // Dirección pública del sitio, para los enlaces y el avatar del bot en Discord
 const SITE_URL = (process.env.SITE_URL || "https://posalana.lutvia.com").replace(/\/$/, "");
@@ -11,7 +11,9 @@ export async function sendDiscordRoll(
     rawDice: Dice,
     vaDeCulo: boolean,
     lomitoActivated: boolean,
-    lomitoPlayers: string[]
+    lomitoPlayers: string[],
+    /** «Dados al piso» 🫣: tiro definitivo del tiro que se le cayó antes (si es un re-tiro) */
+    dropped: { dice: number[]; vaDeCulo: boolean } | null = null
 ) {
     const webhookUrl = process.env.DISCORD_WEBHOOK_URL;
     if (!webhookUrl) {
@@ -22,7 +24,8 @@ export async function sendDiscordRoll(
     // Con «va de culo» se ven el tiro real y el definitivo; los comentarios usan el definitivo
     const dice = finalDice(rawDice, vaDeCulo);
     // Línea del tiro: el definitivo en negrita y, si fue de culo, el real abajo
-    const diceLine = `👉 **${dice.join(" - ")}**${vaDeCulo ? `\n🍑 *tiro real: ${rawDice.join(" - ")}*` : ""}`;
+    // y, si es un re-tiro, el que se le cayó al piso (mismo formato que «va de culo»)
+    const diceLine = `👉 **${dice.join(" - ")}**${vaDeCulo ? `\n🍑 *tiro real: ${rawDice.join(" - ")}*` : ""}${dropped ? `\n🫣 *tiro caído: ${formatDroppedText(dropped.dice, dropped.vaDeCulo)}*` : ""}`;
     const culoLine = vaDeCulo ? `🍑 *¡${displayName} la cantó: fue de culo! Los dados se leen dados vuelta.*\n` : "";
     let content = "";
     let embeds: any[] = [];
@@ -96,9 +99,7 @@ export async function sendDiscordDrop(displayName: string, rawDice: Dice, vaDeCu
     }
 
     // Se ven los tres dados que quedaron en la mesa; el último rodó abajo de la mesa
-    const shown = finalDice(rawDice, vaDeCulo)
-        .map((v, i) => (i === DROPPED_DIE_INDEX ? "🕳️" : String(v)))
-        .join(" - ");
+    const shown = formatDroppedText(finalDice(rawDice, vaDeCulo), false);
     const embed = {
         title: "🫣 ¡Se cayeron los dados al piso!",
         description: `**${displayName}** tiró con tantas ganas que un dado rodó abajo de la mesa:\n👉 **${shown}**${vaDeCulo ? " 🍑" : ""}\n\n🧹 *Ese tiro no vale: ${displayName} tiene que tirar de nuevo.* Le puede tocar a cualquiera de la mesa.\n\n🔗 Mirá cómo viene la mesa en la [App de POSALANA](${SITE_URL}/)`,
@@ -148,7 +149,7 @@ export async function sendDiscordVerdict(
 
     const embed = {
         title: `📜 EL DECRETO DIARIO - ${dateStr}${automatic ? " · ⏰ MESA CERRADA" : ""}`,
-        description: `🚨 **¡ATENCIÓN JUGADORES!** El destino ha hablado y las sentencias de hoy son definitivas e inapelables.\n\n## 🎲 ${playersCount} ${playersCount === 1 ? "jugador tiró" : "jugadores tiraron"} hoy\n\nAquí tienen la distribución oficial de tareas de la mesa para hoy:\n\n🍽️ **PO:** **${poneStr}**\n🗑️ **SA:** **${sacaStr}**\n🧽 **LA:** **${lavaStr}**\n🎉 **NA:** **${zafaronStr !== "Ninguno" ? zafaronStr : "Ninguno"}**\n🛡️ **EXENTOS HOY:** **${exentosStr !== "Ninguno" ? exentosStr : "Ninguno"}**\n${droppedBy.length > 0 ? `🫣 **DADOS AL PISO:** a **${joinNames(droppedBy)}** ${droppedBy.length === 1 ? "se le cayó un dado y tuvo" : "se les cayeron los dados y tuvieron"} que tirar de nuevo\n` : ""}\n👉 *¿Querés apelar con tus estadísticas?* Entrá a la [App de POSALANA](${SITE_URL}/)`,
+        description: `🚨 **¡ATENCIÓN JUGADORES!** El destino ha hablado y las sentencias de hoy son definitivas e inapelables.\n\n## 🎲 ${playersCount} ${playersCount === 1 ? "jugador tiró" : "jugadores tiraron"} hoy\n\nAquí tienen la distribución oficial de tareas de la mesa para hoy:\n\n🍽️ **PO:** **${poneStr}**\n🗑️ **SA:** **${sacaStr}**\n🧽 **LA:** **${lavaStr}**\n🎉 **NA:** **${zafaronStr !== "Ninguno" ? zafaronStr : "Ninguno"}**\n🛡️ **EXENTOS HOY:** **${exentosStr !== "Ninguno" ? exentosStr : "Ninguno"}**\n${droppedBy.length > 0 ? `🫣 **DADOS AL PISO:** a **${joinNames(droppedBy)}** ${droppedBy.length === 1 ? "se le cayeron los dados y no volvió" : "se les cayeron los dados y no volvieron"} a tirar\n` : ""}\n👉 *¿Querés apelar con tus estadísticas?* Entrá a la [App de POSALANA](${SITE_URL}/)`,
         color: colorLutviaEntero("rosa"),
         footer: {
             text: automatic

@@ -2,7 +2,7 @@ import type { Client } from "@libsql/client";
 import { normalizeRoll, type Dice } from "./dice.js";
 
 /**
- * «Se cayeron los dados al piso» 🫣: a veces a alguien se le va un dado abajo de la
+ * «Se cayeron los dados al piso» 🫳: a veces a alguien se le va un dado abajo de la
  * mesa y tiene que tirar de nuevo. Se decide en el momento de la tirada.
  *
  * - **Chance fija e independiente:** en la primera tirada del día de cada jugador hay una

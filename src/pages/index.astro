@@ -50,7 +50,7 @@ const allRollsRes = await db.execute({
 // Tiro definitivo (con «va de culo» ya aplicado); el orden lo da assignDailyChores
 const allRolls = allRollsRes.rows.map(normalizeRoll);
 
-// «Se cayeron los dados al piso» 🫣: los tiros invalidados de hoy (pueden ser varios) y si uno fue el tuyo
+// «Se cayeron los dados al piso» 🫳: los tiros invalidados de hoy (pueden ser varios) y si uno fue el tuyo
 const todayDrops = await getDropsForDate(db, dateStr);
 const rolledUserIds = new Set(allRolls.map(r => String(r.user_id)));
 const myDrop = todayDrops.find(d => String(d.user_id) === String(user.id)) ?? null;
@@ -234,7 +234,7 @@ const savedPlayers = sortedRolls.filter(r => rollChoreMap.get(r.id)?.code === 'N
                     <h2 class="text-4xl md:text-5xl font-black mb-2 tracking-tight text-foreground text-balance">{formatDate(dateStr)}</h2>
                     {myDrop && !hasRolled && (
                         <div role={justDropped ? "alert" : undefined} class:list={["mx-auto max-w-md my-6 bg-lutvia-amarillo/15 border-2 border-lutvia-amarillo/60 rounded-bloque px-5 py-4", justDropped && "animate-in fade-in zoom-in-95 duration-300"]}>
-                            <p class="text-lg font-black text-foreground tracking-tight text-balance"><span aria-hidden="true">🫣</span> ¡Se te cayó un dado al piso!</p>
+                            <p class="text-lg font-black text-foreground tracking-tight text-balance"><span aria-hidden="true">🫳</span> ¡Se te cayó un dado al piso!</p>
                             <div class="my-3 flex justify-center">
                                 <DroppedDice dice={dropDice(myDrop)} vaDeCulo={myDrop.va_de_culo} size="lg" animate={justDropped} />
                             </div>
@@ -381,7 +381,7 @@ const savedPlayers = sortedRolls.filter(r => rollChoreMap.get(r.id)?.code === 'N
                 <ul class="-mt-4 mb-6 flex flex-col gap-1 text-sm text-foreground/60 font-medium bg-lutvia-amarillo/10 border border-lutvia-amarillo/40 rounded-chico px-4 py-2">
                     {pendingDrops.map(d => (
                         <li class="flex flex-wrap items-center gap-x-2 gap-y-1">
-                            <span><span aria-hidden="true">🫣</span> A <strong class="text-foreground">{d.display_name || d.username}</strong> se le cayeron los dados: tiene que tirar de nuevo</span>
+                            <span><span aria-hidden="true">🫳</span> A <strong class="text-foreground">{d.display_name || d.username}</strong> se le cayeron los dados: tiene que tirar de nuevo</span>
                             <DroppedDice dice={dropDice(d)} vaDeCulo={d.va_de_culo} size="sm" />
                         </li>
                     ))}
@@ -435,7 +435,7 @@ const savedPlayers = sortedRolls.filter(r => rollChoreMap.get(r.id)?.code === 'N
                             <div class={`group flex flex-col sm:flex-row sm:items-center justify-between p-5 rounded-chico border transition-all duration-300 hover:shadow-md ${config.bg}`}>
                                 
                                 <!-- User Info & Time -->
-                                <div class="flex items-center gap-4 mb-4 sm:mb-0 w-full sm:w-auto">
+                                <div class="flex items-center gap-4 mb-4 sm:mb-0 w-full sm:w-auto sm:self-start">
                                     <UserAvatar user={roll as any} size="lg" border={true} />
                                     <div class="flex-grow">
                                         <div class="flex flex-wrap items-center gap-2">

@@ -1,5 +1,5 @@
 """
-Simulación de «se cayeron los dados al piso» 🫣 (ver src/utils/drop.ts).
+Simulación de «se cayeron los dados al piso» 🫳 (ver src/utils/drop.ts).
 
 Chance fija por tirada: en la primera tirada del día de cada jugador hay una chance p
 de que se caigan los dados, la misma para todos e independiente (sin tope por día: se

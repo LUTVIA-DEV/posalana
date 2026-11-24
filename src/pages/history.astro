@@ -37,7 +37,7 @@ import { assignDailyChores, chores } from '../utils/chores.js';
 
 const dates = Object.keys(groupedRolls).sort((a, b) => b.localeCompare(a));
 
-// «Se cayeron los dados al piso» 🫣: la anécdota de cada día (el tiro caído no cuenta para nada)
+// «Se cayeron los dados al piso» 🫳: la anécdota de cada día (el tiro caído no cuenta para nada)
 const dropsByDate = await getDropsBetween(db, dates[dates.length - 1] ?? '0000-01-01', dates[0] ?? '9999-12-31');
 
 // Calculate unique seasons present in history dates and load their exemptions
@@ -374,7 +374,7 @@ const currentSeasonExemptions = await getExemptionsForSeason(db, currentSeasonId
                                         {data.pendingDrops.length > 0 && (
                                             <div class="mb-4 pl-6 md:pl-10 relative z-10">
                                                 <div class="inline-flex flex-col gap-1 bg-lutvia-amarillo/10 border border-lutvia-amarillo/40 px-4 py-2 rounded-chico text-sm text-foreground/70 font-medium">
-                                                    <span><span aria-hidden="true">🫣</span> A <strong class="text-foreground">{joinNames(data.pendingDrops.map(d => String(d.display_name || d.username)))}</strong> {data.pendingDrops.length === 1 ? "se le cayeron los dados y no volvió" : "se les cayeron los dados y no volvieron"} a tirar</span>
+                                                    <span><span aria-hidden="true">🫳</span> A <strong class="text-foreground">{joinNames(data.pendingDrops.map(d => String(d.display_name || d.username)))}</strong> {data.pendingDrops.length === 1 ? "se le cayeron los dados y no volvió" : "se les cayeron los dados y no volvieron"} a tirar</span>
                                                     <span class="flex flex-wrap items-center gap-x-3 gap-y-1">
                                                         {data.pendingDrops.map(d => (
                                                             <DroppedDice dice={[d.die1, d.die2, d.die3, d.die4]} vaDeCulo={d.va_de_culo} size="sm" />
@@ -413,16 +413,16 @@ const currentSeasonExemptions = await getExemptionsForSeason(db, currentSeasonId
 
                                                         {/* Stats */}
                                                         <div class="flex items-center gap-4">
+                                                            {drop && (
+                                                                <span class="sm:hidden text-xs font-bold text-foreground/60 whitespace-nowrap" title="Se le cayeron los dados y tuvo que tirar de nuevo">
+                                                                    <span aria-hidden="true">🫳</span>
+                                                                    <span class="sr-only">Se le cayeron los dados y tuvo que tirar de nuevo.</span>
+                                                                </span>
+                                                            )}
                                                             {roll.va_de_culo && (
                                                                 <span class="sm:hidden text-xs font-bold tabular-nums text-foreground/60 whitespace-nowrap" title="Fue de culo">
                                                                     <span aria-hidden="true">🍑</span>
                                                                     <span class="sr-only">Fue de culo: tiro real {roll.raw_dice.join(", ")}, definitivo {[roll.die1, roll.die2, roll.die3, roll.die4].join(", ")}.</span>
-                                                                </span>
-                                                            )}
-                                                            {drop && (
-                                                                <span class="sm:hidden text-xs font-bold text-foreground/60 whitespace-nowrap" title="Se le cayeron los dados y tuvo que tirar de nuevo">
-                                                                    <span aria-hidden="true">🫣</span>
-                                                                    <span class="sr-only">Se le cayeron los dados y tuvo que tirar de nuevo.</span>
                                                                 </span>
                                                             )}
                                                             <div class="hidden sm:flex items-center opacity-70 group-hover:opacity-100 transition-opacity">

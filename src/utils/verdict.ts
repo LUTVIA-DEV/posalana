@@ -43,18 +43,18 @@ export async function publishDailyVerdict(
         exentos: [] as string[]
     };
 
-    // «Dados al piso» 🫣: caídas del día, para anotarlas al lado de cada nombre
+    // «Dados al piso» 🫳: caídas del día, para anotarlas al lado de cada nombre
     const drops = await getDropsForDate(db, dateStr);
 
     for (const roll of sortedRolls) {
         const name = String(roll.display_name || roll.username);
         // Quien cantó «va de culo» lleva su tiro real y el definitivo; a quien se le cayeron
-        // los dados, el tiro caído. Por ejemplo: «Ana (6·4·3·1 — 🍑 real: 1·3·4·6 — 🫣 caído: 2·5·3·🕳️)»
+        // los dados, el tiro caído. Por ejemplo: «Ana (6·4·3·1 — real: 1·3·4·6 🍑 — 🫳 caído: 2·5·3·🕳️)»
         const drop = drops.find(d => String(d.user_id) === String(roll.user_id));
         const notes: string[] = [];
         if (roll.va_de_culo) notes.push(formatDiceText(roll.raw_dice, true, "·"));
         else if (drop) notes.push([roll.die1, roll.die2, roll.die3, roll.die4].join("·"));
-        if (drop) notes.push(`🫣 caído: ${formatDroppedText([drop.die1, drop.die2, drop.die3, drop.die4], drop.va_de_culo, "·")}`);
+        if (drop) notes.push(`🫳 caído: ${formatDroppedText([drop.die1, drop.die2, drop.die3, drop.die4], drop.va_de_culo, "·")}`);
         const displayName = notes.length > 0 ? `${name} (${notes.join(" — ")})` : name;
         const chore = rollChoreMap.get(roll.id);
 

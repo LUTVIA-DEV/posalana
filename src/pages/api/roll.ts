@@ -98,7 +98,7 @@ export async function POST(context: APIContext): Promise<Response> {
 
     const displayName = context.locals.user?.display_name || context.locals.user?.username || "Usuario";
 
-    // «Se cayeron los dados al piso» 🫣: un tiro por día se invalida al azar y hay que tirar de nuevo
+    // «Se cayeron los dados al piso» 🫳: un tiro por día se invalida al azar y hay que tirar de nuevo
     if (context.locals.user && canDrop(context.locals.user)) {
         let drops = false;
         if (forceDrop) {

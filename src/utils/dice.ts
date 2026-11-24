@@ -42,9 +42,9 @@ export const FINAL_DICE_SQL = [1, 2, 3, 4]
 
 /**
  * Texto del tiro en una sola línea (veredicto de Discord), primero el definitivo y después el real:
- * «1 - 3 - 4 - 6» o «6 - 4 - 3 - 1 — 🍑 real: 1 - 3 - 4 - 6».
+ * «1 - 3 - 4 - 6» o «6 - 4 - 3 - 1 — real: 1 - 3 - 4 - 6 🍑» (el 🍑 siempre a la derecha).
  */
 export function formatDiceText(raw: Dice, vaDeCulo: boolean, sep = " - "): string {
     const real = raw.join(sep);
-    return vaDeCulo ? `${finalDice(raw, true).join(sep)} — 🍑 real: ${real}` : real;
+    return vaDeCulo ? `${finalDice(raw, true).join(sep)} — real: ${real} 🍑` : real;
 }

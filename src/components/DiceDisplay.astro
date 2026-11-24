@@ -11,18 +11,18 @@ export interface Props {
     color?: string;
     /**
      * «Va de culo» 🍑: los dados grandes son el tiro definitivo y `raw`, el tiro real, va abajo en chico.
-     * Sin `raw` (por ejemplo, en el podio) se ve solo el definitivo con el 🍑 al lado.
+     * Sin `raw` (por ejemplo, en el podio) se ve solo el definitivo con el 🍑 al lado. El 🍑 va siempre a la derecha.
      */
     vaDeCulo?: boolean;
     raw?: number[];
     /**
-     * «Se cayeron los dados al piso» 🫣: tiro definitivo del tiro que se cayó (ya normalizado).
+     * «Se cayeron los dados al piso» 🫳: tiro definitivo del tiro que se cayó (ya normalizado).
      * Los dados grandes son el re-tiro, que es el que vale, y abajo en chico va el caído
-     * (3 dados y el 4.º como hueco). Con `compact` se ve solo el 🫣 al lado.
+     * (3 dados y el 4.º como hueco). Con `compact` se ve solo el 🫳 al lado.
      */
     dropped?: number[];
     droppedVaDeCulo?: boolean;
-    /** Podio: sin líneas de abajo, solo los íconos (🍑, 🫣) al lado de los dados */
+    /** Podio: sin líneas de abajo, solo los íconos (🍑, 🫳) al lado de los dados */
     compact?: boolean;
 }
 
@@ -64,21 +64,22 @@ const safeClass = color || (isSafe === undefined ? "text-secondary" : (isSafe ? 
     <i class={`${getDieClass(die2)} text-foreground/30 animate-in fade-in zoom-in-95 duration-300 delay-75 hover:scale-110 hover:-rotate-6 transition-all duration-300 cursor-default`}></i>
     <i class={`${getDieClass(die3)} text-foreground/30 animate-in fade-in zoom-in-95 duration-300 delay-150 hover:scale-110 hover:rotate-6 transition-all duration-300 cursor-default`}></i>
     <i class={`${getDieClass(die4)} text-foreground/30 animate-in fade-in zoom-in-95 duration-300 delay-200 hover:scale-110 hover:-rotate-6 transition-all duration-300 cursor-default`}></i>
+    {showFellOnly && (<>
+        <span aria-hidden="true" class="leading-none">🫳</span>
+        <span class="sr-only">Se le cayeron los dados y tuvo que tirar de nuevo</span>
+    </>)}
+    {/* El 🍑 va siempre a la derecha, en todas las líneas */}
     {showPeachOnly && (<>
         <span aria-hidden="true" class="leading-none">🍑</span>
         <span class="sr-only">Fue de culo</span>
-    </>)}
-    {showFellOnly && (<>
-        <span aria-hidden="true" class="leading-none">🫣</span>
-        <span class="sr-only">Se le cayeron los dados y tuvo que tirar de nuevo</span>
     </>)}
 </div>
 {showRaw && (
     <p class={`inline-flex items-center gap-1 text-foreground/40 whitespace-nowrap ${culoTextClasses[size]}`} title="Fue de culo: arriba el tiro que cuenta, abajo el tiro real">
         <span class="sr-only">Va de culo. Tiro definitivo: {finalText}. Tiro real: {raw!.join(", ")}.</span>
         <i class="fa-solid fa-arrow-up text-[0.75em] mr-0.5" aria-hidden="true"></i>
-        <span aria-hidden="true">🍑</span>
         {raw!.map(v => <i class={getDieClass(v)} aria-hidden="true"></i>)}
+        <span aria-hidden="true">🍑</span>
     </p>
 )}
 {showDropped && (
@@ -86,7 +87,7 @@ const safeClass = color || (isSafe === undefined ? "text-secondary" : (isSafe ? 
         {!showRaw && <span class="sr-only">Tiro que vale: {finalText}.</span>}
         <span class="sr-only">Antes se le cayeron los dados al piso.</span>
         <i class="fa-solid fa-rotate-left text-[0.75em] mr-0.5" aria-hidden="true"></i>
-        <span aria-hidden="true">🫣</span>
+        <span aria-hidden="true">🫳</span>
         <DroppedDice dice={dropped!} vaDeCulo={droppedVaDeCulo} size="inherit" />
     </p>
 )}

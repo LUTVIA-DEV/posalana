@@ -10,11 +10,12 @@ export interface Props {
 }
 
 const { vaDeCulo = false, dropped = false } = Astro.props;
-const badge = "inline-flex items-center justify-center w-6 h-6 rounded-pildora bg-white shadow-md text-sm";
+// Cada badge centra su emoji con grid; pointer-events vuelve a prenderse para el tooltip
+const badge = "pointer-events-auto grid place-items-center w-6 h-6 rounded-pildora bg-white shadow-md text-sm";
 ---
 
 {(vaDeCulo || dropped) && (
-    <span class="absolute left-1/2 -translate-x-1/2 -bottom-2 z-10 flex items-center gap-0.5">
+    <span class="absolute inset-x-0 -bottom-2 z-10 flex justify-center items-center gap-0.5 pointer-events-none">
         {dropped && (
             <span class={`${badge} border border-lutvia-amarillo/60`}>
                 <EmojiTip emoji="🚫" title="Se le cayó un dado al piso" text="Su primer tiro no valió: tuvo que tirar de nuevo y cuenta el que se ve." tone="amarillo" align="center" />
@@ -22,7 +23,7 @@ const badge = "inline-flex items-center justify-center w-6 h-6 rounded-pildora b
         )}
         {vaDeCulo && (
             <span class={`${badge} border border-accent/30`}>
-                <EmojiTip emoji="🍑" title="Fue de culo" text="Cantó «va de culo» antes de tirar: cada dado se lee por la cara de abajo." align="center" />
+                <EmojiTip class="-translate-y-[0.5px]" emoji="🍑" title="Fue de culo" text="Cantó «va de culo» antes de tirar: cada dado se lee por la cara de abajo." align="center" />
             </span>
         )}
     </span>

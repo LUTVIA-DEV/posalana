@@ -49,7 +49,7 @@ export async function publishDailyVerdict(
     for (const roll of sortedRolls) {
         const name = String(roll.display_name || roll.username);
         // Quien cantó «va de culo» lleva su tiro real y el definitivo; a quien se le cayeron
-        // los dados, el tiro caído. Por ejemplo: «Ana (6·4·3·1 — real: 1·3·4·6 🍑 — caído: 2·5·3·🕳️ 🚫)»
+        // los dados, el tiro caído. Por ejemplo: «Ana (6·4·3·1 — real: 1·3·4·6 🍑 — caído: 2·5·3·⬚ 🚫)»
         const drop = drops.find(d => String(d.user_id) === String(roll.user_id));
         const notes: string[] = [];
         if (roll.va_de_culo) notes.push(formatDiceText(roll.raw_dice, true, "·"));

@@ -78,8 +78,9 @@ const safeClass = color || (isSafe === undefined ? "text-secondary" : (isSafe ? 
         <span class="sr-only">Fue de culo</span>
     </>)}
 </div>
+{/* Las líneas de abajo (tiro real y tiro caído) se separan un poco más del tiro que vale */}
 {showRaw && (
-    <p class={`inline-flex items-center gap-1 text-foreground/40 whitespace-nowrap ${culoTextClasses[size]}`}>
+    <p class={`inline-flex items-center gap-1 mt-2 text-foreground/40 whitespace-nowrap ${culoTextClasses[size]}`}>
         <span class="sr-only">Va de culo. Tiro definitivo: {finalText}. Tiro real: {raw!.join(", ")}.</span>
         <i class="fa-solid fa-arrow-up text-[0.75em] mr-0.5" aria-hidden="true"></i>
         {raw!.map(v => <i class={getDieClass(v)} aria-hidden="true"></i>)}
@@ -89,14 +90,14 @@ const safeClass = color || (isSafe === undefined ? "text-secondary" : (isSafe ? 
     </p>
 )}
 {showDropped && (
-    <p class={`inline-flex items-center gap-1 text-foreground/40 whitespace-nowrap ${culoTextClasses[size]}`}>
+    <p class={`inline-flex items-center gap-1 text-foreground/40 whitespace-nowrap ${showRaw ? "" : "mt-2"} ${culoTextClasses[size]}`}>
         {!showRaw && <span class="sr-only">Tiro que vale: {finalText}.</span>}
         <i class="fa-solid fa-rotate-left text-[0.75em] mr-0.5" aria-hidden="true"></i>
         <DroppedDice dice={dropped!} vaDeCulo={droppedVaDeCulo} size="inherit" peach={false} />
         {/* Los emojis a la derecha y juntitos: primero el 🚫 y el 🍑 siempre último. Cada uno con su tooltip */}
-        <span class="inline-flex items-center gap-0.5 ml-0.5">
+        <span class="inline-flex items-center ml-0.5">
             <EmojiTip emoji="🚫" title="Se le cayó un dado al piso" text="Ese tiro (el de abajo, con el hueco) no vale para nada: tuvo que tirar de nuevo y cuenta el de arriba." tone="amarillo" />
-            {droppedVaDeCulo && <EmojiTip emoji="🍑" title="Ese tiro era de culo" text="Lo había cantado «va de culo», pero igual se le cayó un dado al piso y no cuenta." />}
+            {droppedVaDeCulo && <EmojiTip class="-ml-1" emoji="🍑" title="Ese tiro era de culo" text="Lo había cantado «va de culo», pero igual se le cayó un dado al piso y no cuenta." />}
         </span>
     </p>
 )}

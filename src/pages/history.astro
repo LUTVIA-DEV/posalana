@@ -6,8 +6,7 @@ import DiceDisplay from '../components/DiceDisplay.astro';
 import StatsTable from '../components/StatsTable.astro';
 import { formatDate } from '../utils/date.js';
 import { normalizeRoll, type NormalizedRoll } from '../utils/dice.js';
-import { getDropsBetween, joinNames } from '../utils/drop.js';
-import DroppedDice from '../components/DroppedDice.astro';
+import { getDropsBetween } from '../utils/drop.js';
 
 if (!Astro.locals.user) {
 	return Astro.redirect('/login');
@@ -37,7 +36,7 @@ import { assignDailyChores, chores } from '../utils/chores.js';
 
 const dates = Object.keys(groupedRolls).sort((a, b) => b.localeCompare(a));
 
-// «Se cayeron los dados al piso» 🫳: la anécdota de cada día (el tiro caído no cuenta para nada)
+// «Se cayó un dado al piso» 🫳: la anécdota de cada día (el tiro caído no cuenta para nada)
 const dropsByDate = await getDropsBetween(db, dates[dates.length - 1] ?? '0000-01-01', dates[0] ?? '9999-12-31');
 
 // Calculate unique seasons present in history dates and load their exemptions
@@ -60,9 +59,7 @@ const historyData = dates.map(date => {
         lomitoActivated,
         lomitoPlayers,
         exemptions: seasonExemptions,
-        drops: dropsByDate.get(date) ?? [],
-        // Caídas de jugadores que ese día no volvieron a tirar (las demás se ven en su fila)
-        pendingDrops: (dropsByDate.get(date) ?? []).filter(d => !sortedRolls.some(r => String(r.user_id) === String(d.user_id)))
+        drops: dropsByDate.get(date) ?? []
     };
 });
 
@@ -371,18 +368,6 @@ const currentSeasonExemptions = await getExemptionsForSeason(db, currentSeasonId
                                             </div>
                                         )}
 
-                                        {data.pendingDrops.length > 0 && (
-                                            <div class="mb-4 pl-6 md:pl-10 relative z-10">
-                                                <div class="inline-flex flex-col gap-1 bg-lutvia-amarillo/10 border border-lutvia-amarillo/40 px-4 py-2 rounded-chico text-sm text-foreground/70 font-medium">
-                                                    <span><span aria-hidden="true">🫳</span> A <strong class="text-foreground">{joinNames(data.pendingDrops.map(d => String(d.display_name || d.username)))}</strong> {data.pendingDrops.length === 1 ? "se le cayeron los dados y no volvió" : "se les cayeron los dados y no volvieron"} a tirar</span>
-                                                    <span class="flex flex-wrap items-center gap-x-3 gap-y-1">
-                                                        {data.pendingDrops.map(d => (
-                                                            <DroppedDice dice={[d.die1, d.die2, d.die3, d.die4]} vaDeCulo={d.va_de_culo} size="sm" />
-                                                        ))}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        )}
 
                                         {/* Rolls Grid */}
                                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pl-6 md:pl-10 relative z-10">
@@ -414,9 +399,9 @@ const currentSeasonExemptions = await getExemptionsForSeason(db, currentSeasonId
                                                         {/* Stats */}
                                                         <div class="flex items-center gap-4">
                                                             {drop && (
-                                                                <span class="sm:hidden text-xs font-bold text-foreground/60 whitespace-nowrap" title="Se le cayeron los dados y tuvo que tirar de nuevo">
+                                                                <span class="sm:hidden text-xs font-bold text-foreground/60 whitespace-nowrap" title="Se le cayó un dado al piso y tuvo que tirar de nuevo">
                                                                     <span aria-hidden="true">🫳</span>
-                                                                    <span class="sr-only">Se le cayeron los dados y tuvo que tirar de nuevo.</span>
+                                                                    <span class="sr-only">Se le cayó un dado al piso y tuvo que tirar de nuevo.</span>
                                                                 </span>
                                                             )}
                                                             {roll.va_de_culo && (

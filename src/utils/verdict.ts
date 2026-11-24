@@ -43,7 +43,7 @@ export async function publishDailyVerdict(
         exentos: [] as string[]
     };
 
-    // «Dados al piso» 🫳: caídas del día, para anotarlas al lado de cada nombre
+    // «Dado al piso» 🫳: caídas del día, para anotarlas al lado de cada nombre
     const drops = await getDropsForDate(db, dateStr);
 
     for (const roll of sortedRolls) {
@@ -81,7 +81,7 @@ export async function publishDailyVerdict(
 
     const playersCount = new Set(allRolls.map(r => String(r.user_id))).size;
 
-    // A quienes se les cayeron los dados y no volvieron a tirar (los demás ya figuran con su tarea)
+    // A quienes se les cayó un dado al piso y no volvieron a tirar (los demás ya figuran con su tarea)
     const droppedBy = drops
         .filter(d => !allRolls.some(r => String(r.user_id) === String(d.user_id)))
         .map(d => String(d.display_name || d.username));

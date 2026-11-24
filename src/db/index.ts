@@ -70,7 +70,7 @@ db.executeMultiple(`
       created_at TEXT NOT NULL
   );
 
-  -- «Se cayeron los dados al piso» 🫳: los tiros invalidados (como máximo uno por jugador y día).
+  -- «Se cayó un dado al piso» 🫳: los tiros invalidados (como máximo uno por jugador y día).
   -- No cuentan para nada; se guardan como registro y para la anécdota.
   CREATE TABLE IF NOT EXISTS dropped_roll (
       id TEXT NOT NULL PRIMARY KEY,
@@ -124,7 +124,7 @@ db.executeMultiple(`
       // Column probably already exists, ignore
   }
   
-  // «Dados al piso» 🫳: la primera versión tenía UNIQUE(date) (una caída por día); ahora es
+  // «Dado al piso» 🫳: la primera versión tenía UNIQUE(date) (una caída por día); ahora es
   // una por jugador y día. Si la tabla quedó con el esquema viejo, se rearma con los mismos datos.
   try {
       const t = await db.execute("SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'dropped_roll'");

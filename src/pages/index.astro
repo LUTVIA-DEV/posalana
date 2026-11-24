@@ -8,7 +8,7 @@ import ScheduleNotice from '../components/ScheduleNotice.astro';
 import { formatDate } from '../utils/date.js';
 import { normalizeRoll } from '../utils/dice.js';
 import { devUnlimitedRolls } from '../utils/dev.js';
-import { getDropsForDate } from '../utils/drop.js';
+import { DROPPED_DIE_INDEX, getDropsForDate } from '../utils/drop.js';
 import DroppedDice from '../components/DroppedDice.astro';
 import { getArgentinaNow, getNextPlayDay, getRollSchedule, getRollWindowStatus, SCHEDULE_NOTICE_UNTIL } from '../utils/schedule.js';
 
@@ -50,12 +50,13 @@ const allRollsRes = await db.execute({
 // Tiro definitivo (con «va de culo» ya aplicado); el orden lo da assignDailyChores
 const allRolls = allRollsRes.rows.map(normalizeRoll);
 
-// «Se cayeron los dados al piso» 🫳: los tiros invalidados de hoy (pueden ser varios) y si uno fue el tuyo
+// «Se cayó un dado al piso» 🫳: los tiros invalidados de hoy (pueden ser varios) y si uno fue el tuyo
 const todayDrops = await getDropsForDate(db, dateStr);
 const rolledUserIds = new Set(allRolls.map(r => String(r.user_id)));
 const myDrop = todayDrops.find(d => String(d.user_id) === String(user.id)) ?? null;
 // Recién se cayó (venís del redirect de /api/roll): el dado se cae con animación
 const justDropped = !!myDrop && !hasRolled && Astro.url.searchParams.get('caida') === '1';
+const diceWords = ['one', 'two', 'three', 'four', 'five', 'six'];
 const dropDice = (d: (typeof todayDrops)[number]) => [d.die1, d.die2, d.die3, d.die4] as number[];
 // Props de DiceDisplay para mostrar el tiro caído de un jugador (igual que «va de culo»)
 const dropByUser = new Map(todayDrops.map(d => [String(d.user_id), d]));
@@ -63,8 +64,7 @@ const dropProps = (userId: unknown) => {
     const d = dropByUser.get(String(userId));
     return d ? { dropped: dropDice(d), droppedVaDeCulo: d.va_de_culo } : {};
 };
-// Caídas que todavía esperan el re-tiro (esas no tienen fila en el ranking)
-const pendingDrops = todayDrops.filter(d => !rolledUserIds.has(String(d.user_id)));
+
 
 const chores = [
     { label: "Lava los platos", code: "LA", emoji: "🧽" },
@@ -236,7 +236,7 @@ const savedPlayers = sortedRolls.filter(r => rollChoreMap.get(r.id)?.code === 'N
                         <div role={justDropped ? "alert" : undefined} class:list={["mx-auto max-w-md my-6 bg-lutvia-amarillo/15 border-2 border-lutvia-amarillo/60 rounded-bloque px-5 py-4", justDropped && "animate-in fade-in zoom-in-95 duration-300"]}>
                             <p class="text-lg font-black text-foreground tracking-tight text-balance"><span aria-hidden="true">🫳</span> ¡Se te cayó un dado al piso!</p>
                             <div class="my-3 flex justify-center">
-                                <DroppedDice dice={dropDice(myDrop)} vaDeCulo={myDrop.va_de_culo} size="lg" animate={justDropped} />
+                                <DroppedDice dice={dropDice(myDrop)} vaDeCulo={myDrop.va_de_culo} size="lg" />
                             </div>
                             <p class="text-sm text-foreground/70 font-medium text-pretty">Ese tiro no vale. Juntalo y <strong>tirá de nuevo</strong>: podés volver a elegir si va de culo.</p>
                         </div>
@@ -260,7 +260,7 @@ const savedPlayers = sortedRolls.filter(r => rollChoreMap.get(r.id)?.code === 'N
                         {unlimitedRolls && (
                             <label class="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-foreground/40 cursor-pointer select-none">
                                 <input type="checkbox" name="forzar_caida" value="1" class="accent-[var(--lutvia-oscuro)]" />
-                                <i class="fa-solid fa-flask" aria-hidden="true"></i> Forzar dados al piso (dev)
+                                <i class="fa-solid fa-flask" aria-hidden="true"></i> Forzar dado al piso (dev)
                             </label>
                         )}
                         <!-- «Va de culo» 🍑: se canta antes de tirar; el servidor da vuelta los dados (7 − x) -->
@@ -377,16 +377,6 @@ const savedPlayers = sortedRolls.filter(r => rollChoreMap.get(r.id)?.code === 'N
                     <i class="fa-solid fa-trophy text-secondary"></i> Ranking POSALANA
                 </h3>
             </div>
-            {pendingDrops.length > 0 && (
-                <ul class="-mt-4 mb-6 flex flex-col gap-1 text-sm text-foreground/60 font-medium bg-lutvia-amarillo/10 border border-lutvia-amarillo/40 rounded-chico px-4 py-2">
-                    {pendingDrops.map(d => (
-                        <li class="flex flex-wrap items-center gap-x-2 gap-y-1">
-                            <span><span aria-hidden="true">🫳</span> A <strong class="text-foreground">{d.display_name || d.username}</strong> se le cayeron los dados: tiene que tirar de nuevo</span>
-                            <DroppedDice dice={dropDice(d)} vaDeCulo={d.va_de_culo} size="sm" />
-                        </li>
-                    ))}
-                </ul>
-            )}
             
             {allRolls.length === 0 ? (
                 <div class="py-16 text-center border-2 border-dashed border-foreground/10 rounded-bloque">
@@ -734,6 +724,52 @@ const savedPlayers = sortedRolls.filter(r => rollChoreMap.get(r.id)?.code === 'N
         </script>
         
         {showScheduleNotice && <ScheduleNotice start={schedule.start} end={schedule.end} dateStr={dateStr} />}
+
+        {justDropped && myDrop && (
+            <!-- «Dado al piso» 🫳: animación especial al volver de la tirada. Tres dados quedan en la mesa
+                 y el cuarto rebota, gira y se cae (con prefers-reduced-motion queda directamente afuera). -->
+            <div id="drop-overlay" role="dialog" aria-modal="true" aria-labelledby="drop-overlay-title" aria-describedby="drop-overlay-text" class="fixed inset-0 z-[100] bg-background/80 backdrop-blur-md flex flex-col items-center justify-center animate-in fade-in duration-300 overflow-hidden">
+                <div class="bg-white/90 border-2 border-lutvia-amarillo/60 p-8 sm:p-12 rounded-3xl shadow-2xl flex flex-col items-center gap-6 max-w-md w-[90%] text-center animate-in zoom-in-95 duration-300">
+                    <p class="text-foreground/60 font-black tracking-widest uppercase text-sm">¡Uy, uy, uy!</p>
+                    <span class="text-6xl leading-none animate-mano-al-piso" aria-hidden="true">🫳</span>
+                    <div class="flex items-center justify-center gap-4 sm:gap-6 text-5xl sm:text-6xl py-2" aria-hidden="true">
+                        {dropDice(myDrop).map((v, i) => i === DROPPED_DIE_INDEX ? (
+                            <span class="relative inline-flex items-center justify-center w-[1em] h-[1em]">
+                                <span class="absolute inset-0 rounded-[0.2em] border-[3px] border-dashed border-foreground/25 animate-in fade-in duration-500" style="animation-delay: 1.1s; animation-fill-mode: both;"></span>
+                                <i class={`fa-solid fa-dice-${diceWords[v - 1]} text-foreground/40 animate-dado-se-cae`}></i>
+                            </span>
+                        ) : (
+                            <i class={`fa-solid fa-dice-${diceWords[v - 1]} text-foreground/40 animate-mesa-golpe`} style={`animation-delay: ${i * 60}ms`}></i>
+                        ))}
+                    </div>
+                    <div class="space-y-2">
+                        <h3 id="drop-overlay-title" class="text-2xl font-black text-foreground tracking-tight text-balance">¡Se te cayó un dado al piso!</h3>
+                        <p id="drop-overlay-text" class="text-sm text-foreground/60 font-medium text-pretty">Ese tiro no vale para nada. Juntalo y tirá de nuevo (podés volver a elegir si va de culo).</p>
+                    </div>
+                    <button type="button" id="drop-overlay-close" class="bg-foreground text-background font-bold px-6 py-3 rounded-pildora hover:opacity-90 transition-opacity cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lutvia-amarillo focus-visible:ring-offset-2">
+                        Juntar el dado y tirar de nuevo
+                    </button>
+                </div>
+            </div>
+        )}
+        {justDropped && (
+            <script is:inline>
+                (() => {
+                    const overlay = document.getElementById("drop-overlay");
+                    if (!overlay) return;
+                    const close = () => {
+                        overlay.remove();
+                        // Saca ?caida=1 de la URL para que al recargar no se repita
+                        history.replaceState(null, "", location.pathname);
+                        document.getElementById("roll-button")?.focus();
+                    };
+                    document.getElementById("drop-overlay-close")?.addEventListener("click", close);
+                    overlay.addEventListener("click", (e) => { if (e.target === overlay) close(); });
+                    document.addEventListener("keydown", (e) => { if (e.key === "Escape") close(); }, { once: true });
+                    document.getElementById("drop-overlay-close")?.focus();
+                })();
+            </script>
+        )}
 
         <!-- Fullscreen Dice Rolling Overlay -->
         <div id="roll-overlay" class="fixed inset-0 z-[100] bg-background/80 backdrop-blur-md hidden flex-col items-center justify-center animate-in fade-in duration-300">

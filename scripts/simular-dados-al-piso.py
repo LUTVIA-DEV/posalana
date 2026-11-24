@@ -1,8 +1,8 @@
 """
-Simulación de «se cayeron los dados al piso» 🫳 (ver src/utils/drop.ts).
+Simulación de «se cayó un dado al piso» 🫳 (ver src/utils/drop.ts).
 
 Chance fija por tirada: en la primera tirada del día de cada jugador hay una chance p
-de que se caigan los dados, la misma para todos e independiente (sin tope por día: se
+de que se caiga un dado al piso, la misma para todos e independiente (sin tope por día: se
 pueden caer varios o ninguno). Por defecto p = 1 − (1 − 0,9)^(1/n), con n el piso de
 asistencia (7 jugadores), así hasta en un día flojo hay ~90 % de chance de al menos una
 caída. Asistencia real del equipo: entre 7 y 11 jugadores por día, que llegan en

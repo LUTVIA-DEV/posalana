@@ -98,7 +98,7 @@ export async function POST(context: APIContext): Promise<Response> {
 
     const displayName = context.locals.user?.display_name || context.locals.user?.username || "Usuario";
 
-    // «Se cayeron los dados al piso» 🫳: un tiro por día se invalida al azar y hay que tirar de nuevo
+    // «Se cayó un dado al piso» 🫳: un tiro por día se invalida al azar y hay que tirar de nuevo
     if (context.locals.user && canDrop(context.locals.user)) {
         let drops = false;
         if (forceDrop) {
@@ -168,7 +168,7 @@ export async function POST(context: APIContext): Promise<Response> {
     }
 
     // Send Discord notification asynchronously (don't block the redirect)
-    // Si es el re-tiro después de que se le cayeron los dados, el mensaje muestra también el caído
+    // Si es el re-tiro después de que se le cayó un dado al piso, el mensaje muestra también el caído
     const myDrop = (await getDropsForDate(db, dateStr)).find(d => String(d.user_id) === String(userId));
     const droppedForDiscord = myDrop ? { dice: [myDrop.die1, myDrop.die2, myDrop.die3, myDrop.die4], vaDeCulo: myDrop.va_de_culo } : null;
     sendDiscordRoll(displayName, rawDice, vaDeCulo, discordLomitoActivated, discordLomitoPlayers, droppedForDiscord).catch(err => {

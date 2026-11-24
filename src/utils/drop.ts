@@ -2,11 +2,11 @@ import type { Client } from "@libsql/client";
 import { normalizeRoll, type Dice } from "./dice.js";
 
 /**
- * «Se cayeron los dados al piso» 🫳: a veces a alguien se le va un dado abajo de la
+ * «Se cayó un dado al piso» 🫳: a veces a alguien se le va un dado abajo de la
  * mesa y tiene que tirar de nuevo. Se decide en el momento de la tirada.
  *
  * - **Chance fija e independiente:** en la primera tirada del día de cada jugador hay una
- *   chance `p` de que se caigan los dados, la misma para todos: no depende del jugador,
+ *   chance `p` de que se caiga un dado al piso, la misma para todos: no depende del jugador,
  *   de su asistencia ni del orden de llegada. No hay tope por día: se pueden caer varios
  *   o ninguno. A un mismo jugador no se le caen dos veces el mismo día (el re-tiro no sortea).
  * - **Cuánto vale p:** si el admin la fijó (`settings.drop_probability`, en %), esa. Si no,
@@ -84,7 +84,7 @@ export async function getDropProbability(db: Client, dateStr: string): Promise<n
     return defaultDropProbability(db, dateStr);
 }
 
-/** ¿A este jugador ya se le cayeron los dados hoy? (no le pasa dos veces el mismo día) */
+/** ¿A este jugador ya se le cayó un dado al piso hoy? (no le pasa dos veces el mismo día) */
 export async function hasUserDropToday(db: Client, userId: string, dateStr: string): Promise<boolean> {
     const res = await db.execute({ sql: "SELECT 1 FROM dropped_roll WHERE user_id = ? AND date = ? LIMIT 1", args: [userId, dateStr] });
     return res.rows.length > 0;

@@ -117,7 +117,7 @@ const savedPlayers = sortedRolls.filter(r => rollChoreMap.get(r.id)?.code === 'N
 
                             <!-- Dice Roll -->
                             <div class="mt-3.5 flex justify-center">
-                                <DiceDisplay die1={assignedPO.die1 as number} die2={assignedPO.die2 as number} die3={assignedPO.die3 as number} die4={assignedPO.die4 as number} vaDeCulo={assignedPO.va_de_culo} {...dropProps(assignedPO.user_id)} compact size="md" color="text-primary" />
+                                <DiceDisplay die1={assignedPO.die1 as number} die2={assignedPO.die2 as number} die3={assignedPO.die3 as number} die4={assignedPO.die4 as number} vaDeCulo={assignedPO.va_de_culo} {...dropProps(assignedPO.user_id)} compact size="podio" color="text-primary" />
                             </div>
 
                             <span class="font-black text-foreground text-xs sm:text-sm mt-2 block text-center leading-tight px-1">{assignedPO.display_name}</span>
@@ -147,7 +147,7 @@ const savedPlayers = sortedRolls.filter(r => rollChoreMap.get(r.id)?.code === 'N
                             
                             <!-- Dice Roll -->
                             <div class="mt-3.5 flex justify-center">
-                                <DiceDisplay die1={assignedSA.die1 as number} die2={assignedSA.die2 as number} die3={assignedSA.die3 as number} die4={assignedSA.die4 as number} vaDeCulo={assignedSA.va_de_culo} {...dropProps(assignedSA.user_id)} compact size="md" color="text-secondary" />
+                                <DiceDisplay die1={assignedSA.die1 as number} die2={assignedSA.die2 as number} die3={assignedSA.die3 as number} die4={assignedSA.die4 as number} vaDeCulo={assignedSA.va_de_culo} {...dropProps(assignedSA.user_id)} compact size="podio" color="text-secondary" />
                             </div>
 
                             <span class="font-black text-foreground text-xs sm:text-sm mt-2 block text-center leading-tight px-1">{assignedSA.display_name}</span>
@@ -177,7 +177,7 @@ const savedPlayers = sortedRolls.filter(r => rollChoreMap.get(r.id)?.code === 'N
 
                             <!-- Dice Roll -->
                             <div class="mt-3.5 flex justify-center">
-                                <DiceDisplay die1={assignedLA.die1 as number} die2={assignedLA.die2 as number} die3={assignedLA.die3 as number} die4={assignedLA.die4 as number} vaDeCulo={assignedLA.va_de_culo} {...dropProps(assignedLA.user_id)} compact size="md" color="text-accent" />
+                                <DiceDisplay die1={assignedLA.die1 as number} die2={assignedLA.die2 as number} die3={assignedLA.die3 as number} die4={assignedLA.die4 as number} vaDeCulo={assignedLA.va_de_culo} {...dropProps(assignedLA.user_id)} compact size="podio" color="text-accent" />
                             </div>
 
                             <span class="font-black text-foreground text-xs sm:text-sm mt-2 block text-center leading-tight px-1">{assignedLA.display_name}</span>

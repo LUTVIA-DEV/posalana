@@ -8,7 +8,8 @@ export interface Props {
     die3: number;
     die4: number;
     isSafe?: boolean;
-    size?: "sm" | "md" | "lg" | "xl";
+    /** `podio`: un poco más grandes que `md` y con poco espacio entre dados */
+    size?: "sm" | "md" | "lg" | "xl" | "podio";
     color?: string;
     /**
      * «Va de culo» 🍑: los dados grandes son el tiro definitivo y `raw`, el tiro real, va abajo en chico.
@@ -45,7 +46,8 @@ const sizeClasses = {
     sm: "text-sm gap-1",
     md: "text-base md:text-lg gap-1.5 md:gap-2",
     lg: "text-xl md:text-2xl gap-2 md:gap-3",
-    xl: "text-3xl sm:text-4xl md:text-5xl lg:text-6xl gap-3 sm:gap-4 lg:gap-6"
+    xl: "text-3xl sm:text-4xl md:text-5xl lg:text-6xl gap-3 sm:gap-4 lg:gap-6",
+    podio: "text-xl md:text-2xl gap-1"
 };
 
 // Líneas chicas de abajo (tiro real de culo y tiro caído)
@@ -53,7 +55,8 @@ const culoTextClasses = {
     sm: "text-xs",
     md: "text-sm",
     lg: "text-sm",
-    xl: "text-base sm:text-lg"
+    xl: "text-base sm:text-lg",
+    podio: "text-sm"
 };
 
 // Texto del tooltip del 🍑 en la línea del tiro real

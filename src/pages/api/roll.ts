@@ -105,12 +105,12 @@ export async function POST(context: APIContext): Promise<Response> {
             await db.execute({ sql: "DELETE FROM dropped_roll WHERE user_id = ? AND date = ?", args: [userId, dateStr] });
             drops = true;
         } else if (!hadRollToday && !(await hasUserDropToday(db, userId, dateStr))) {
-            // Chance fija en la primera tirada del día, igual para todos (con tope de 2 caídas por día)
+            // Chance fija en la primera tirada del día, igual para todos: puro azar, sin tope por día
             drops = Math.random() < (await getDropProbability(db, dateStr));
         }
         if (drops) {
             const raw: Dice = [d1, d2, d3, d4];
-            if (await claimDrop(db, { userId, dateStr, timeStr, raw, vaDeCulo }, { ignoreCap: forceDrop })) {
+            if (await claimDrop(db, { userId, dateStr, timeStr, raw, vaDeCulo })) {
                 sendDiscordDrop(displayName, raw, vaDeCulo).catch(err => {
                     console.error("Error sending Discord drop:", err);
                 });

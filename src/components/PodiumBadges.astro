@@ -1,0 +1,29 @@
+---
+// Badges del podio: 🚫 (se le cayó un dado al piso) y 🍑 (fue de culo), centrados abajo de la
+// foto de perfil y un poco encima de ella. El 🍑 va siempre último (a la derecha).
+// Va adentro del contenedor `relative` de la foto.
+import EmojiTip from "./EmojiTip.astro";
+
+export interface Props {
+    vaDeCulo?: boolean;
+    dropped?: boolean;
+}
+
+const { vaDeCulo = false, dropped = false } = Astro.props;
+const badge = "inline-flex items-center justify-center w-6 h-6 rounded-pildora bg-white shadow-md text-sm";
+---
+
+{(vaDeCulo || dropped) && (
+    <span class="absolute left-1/2 -translate-x-1/2 -bottom-2 z-10 flex items-center -space-x-1">
+        {dropped && (
+            <span class={`${badge} border border-lutvia-amarillo/60`}>
+                <EmojiTip emoji="🚫" title="Se le cayó un dado al piso" text="Su primer tiro no valió: tuvo que tirar de nuevo y cuenta el que se ve." tone="amarillo" align="center" />
+            </span>
+        )}
+        {vaDeCulo && (
+            <span class={`${badge} border border-accent/30`}>
+                <EmojiTip emoji="🍑" title="Fue de culo" text="Cantó «va de culo» antes de tirar: cada dado se lee por la cara de abajo." align="center" />
+            </span>
+        )}
+    </span>
+)}

@@ -10,16 +10,19 @@ export interface Props {
     tone?: "accent" | "amarillo";
     /** Clases extra (por ejemplo, un margen negativo para juntar dos emojis) */
     class?: string;
+    /** Dónde se abre el tooltip: alineado a la derecha del emoji (filas) o centrado (podio) */
+    align?: "right" | "center";
 }
 
-const { emoji, title, text, tone = "accent", class: extra = "" } = Astro.props;
+const { emoji, title, text, tone = "accent", class: extra = "", align = "right" } = Astro.props;
+const position = align === "center" ? "left-1/2 -translate-x-1/2" : "right-0";
 const border = tone === "amarillo" ? "border-lutvia-amarillo/60" : "border-accent/30";
 const ring = tone === "amarillo" ? "focus-visible:ring-lutvia-amarillo" : "focus-visible:ring-accent";
 ---
 
 <span tabindex="0" role="img" aria-label={`${title}. ${text}`} onkeydown="if (event.key === 'Escape') this.blur()" class={`group/tip relative inline-flex leading-none cursor-help ${extra} rounded-[0.3em] focus-visible:outline-none focus-visible:ring-2 ${ring}`}>
     <span aria-hidden="true">{emoji}</span>
-    <span aria-hidden="true" class={`invisible opacity-0 group-hover/tip:visible group-hover/tip:opacity-100 group-focus/tip:visible group-focus/tip:opacity-100 transition-opacity duration-200 absolute z-20 top-full right-0 mt-2 w-56 bg-white border ${border} rounded-chico shadow-lg p-3 text-left whitespace-normal pointer-events-none`}>
+    <span aria-hidden="true" class={`invisible opacity-0 group-hover/tip:visible group-hover/tip:opacity-100 group-focus/tip:visible group-focus/tip:opacity-100 transition-opacity duration-200 absolute z-30 top-full ${position} mt-2 w-56 bg-white border ${border} rounded-chico shadow-lg p-3 text-left whitespace-normal pointer-events-none`}>
         <span class="block text-xs font-black text-foreground mb-1">{emoji} {title}</span>
         <span class="block text-[11px] text-foreground/70 leading-snug text-pretty">{text}</span>
     </span>

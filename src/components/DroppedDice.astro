@@ -11,9 +11,11 @@ export interface Props {
     /** `inherit` toma el tamaño de letra de quien lo contiene (por ejemplo, la línea chica de `DiceDisplay`) */
     size?: "sm" | "md" | "lg" | "inherit";
     animate?: boolean;
+    /** Mostrar el 🍑 si el tiro caído era de culo (DiceDisplay lo apaga y lo pone después del 🚫) */
+    peach?: boolean;
 }
 
-const { dice, vaDeCulo = false, size = "sm", animate = false } = Astro.props;
+const { dice, vaDeCulo = false, size = "sm", animate = false, peach = true } = Astro.props;
 const diceWords = ["one", "two", "three", "four", "five", "six"];
 const sizeClasses = {
     sm: "text-sm gap-1",
@@ -33,5 +35,5 @@ const shownText = dice.filter((_, i) => i !== DROPPED_DIE_INDEX).join(", ");
     ) : (
         <i class={`fa-solid fa-dice-${diceWords[v - 1]} text-foreground/30`} aria-hidden="true"></i>
     ))}
-    {vaDeCulo && <span class="leading-none" aria-hidden="true">🍑</span>}
+    {vaDeCulo && peach && <span class="leading-none" aria-hidden="true">🍑</span>}
 </span>

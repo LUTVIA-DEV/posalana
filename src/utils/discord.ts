@@ -1,6 +1,6 @@
 import { colorLutviaEntero } from "./tokens.js";
 import { finalDice, type Dice } from "./dice.js";
-import { formatDroppedText, joinNames } from "./drop.js";
+import { formatDroppedDice, formatDroppedText, joinNames } from "./drop.js";
 
 // Dirección pública del sitio, para los enlaces y el avatar del bot en Discord
 const SITE_URL = (process.env.SITE_URL || "https://posalana.lutvia.com").replace(/\/$/, "");
@@ -25,7 +25,7 @@ export async function sendDiscordRoll(
     const dice = finalDice(rawDice, vaDeCulo);
     // Línea del tiro: el definitivo en negrita y, si fue de culo, el real abajo
     // y, si es un re-tiro, el que se le cayó al piso (mismo formato que «va de culo»)
-    const diceLine = `👉 **${dice.join(" - ")}**${vaDeCulo ? `\n*tiro real: ${rawDice.join(" - ")}* 🍑` : ""}${dropped ? `\n🚫 *tiro caído: ${formatDroppedText(dropped.dice, dropped.vaDeCulo)}*` : ""}`;
+    const diceLine = `👉 **${dice.join(" - ")}**${vaDeCulo ? `\n*tiro real:* ${rawDice.join(" - ")} 🍑` : ""}${dropped ? `\n*tiro caído:* ${formatDroppedText(dropped.dice, dropped.vaDeCulo)}` : ""}`;
     const culoLine = vaDeCulo ? `🍑 *¡${displayName} la cantó: fue de culo! Los dados se leen dados vuelta.*\n` : "";
     let content = "";
     let embeds: any[] = [];
@@ -99,10 +99,10 @@ export async function sendDiscordDrop(displayName: string, rawDice: Dice, vaDeCu
     }
 
     // Se ven los tres dados que quedaron en la mesa; el último rodó abajo de la mesa
-    const shown = formatDroppedText(finalDice(rawDice, vaDeCulo), false);
+    const shown = formatDroppedDice(finalDice(rawDice, vaDeCulo));
     const embed = {
         title: "🚫 ¡Se cayó un dado al piso!",
-        description: `**${displayName}** tiró con tantas ganas que un dado rodó abajo de la mesa:\n👉 **${shown}**${vaDeCulo ? " 🍑" : ""}\n\n🧹 *Ese tiro no vale: ${displayName} tiene que tirar de nuevo.* Le puede tocar a cualquiera de la mesa.\n\n🔗 Mirá cómo viene la mesa en la [App de POSALANA](${SITE_URL}/)`,
+        description: `**${displayName}** tiró con tantas ganas que un dado rodó abajo de la mesa:\n👉 **${shown}** 🚫${vaDeCulo ? " 🍑" : ""}\n\n🧹 *Ese tiro no vale: ${displayName} tiene que tirar de nuevo.* Le puede tocar a cualquiera de la mesa.\n\n🔗 Mirá cómo viene la mesa en la [App de POSALANA](${SITE_URL}/)`,
         color: colorLutviaEntero("amarillo"),
         footer: { text: "POSALANA • Dado al piso 🚫" },
         timestamp: new Date().toISOString()

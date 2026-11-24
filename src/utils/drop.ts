@@ -134,14 +134,18 @@ export async function getDropsBetween(db: Client, from: string, to: string) {
     return byDate;
 }
 
+/** Dados del tiro caído para Discord: los 3 de la mesa y el 4.º como hueco («2 - 5 - 3 - 🕳️»). */
+export function formatDroppedDice(dice: number[], sep = " - "): string {
+    return dice.map((v, i) => (i === DROPPED_DIE_INDEX ? "🕳️" : String(v))).join(sep);
+}
+
 /**
- * Texto del tiro caído para Discord: los 3 dados que quedaron en la mesa y el 4.º como
- * hueco («2 - 5 - 3 - 🕳️», con 🍑 al final si había cantado «va de culo»).
+ * Texto del tiro caído para Discord, con los emojis a la derecha como en la app:
+ * «2 - 5 - 3 - 🕳️ 🚫», y el 🍑 al final si había cantado «va de culo» (el 🍑 va siempre último).
  * `dice` es el tiro definitivo del caído (ya normalizado).
  */
 export function formatDroppedText(dice: number[], vaDeCulo: boolean, sep = " - "): string {
-    const shown = dice.map((v, i) => (i === DROPPED_DIE_INDEX ? "🕳️" : String(v))).join(sep);
-    return `${shown}${vaDeCulo ? " 🍑" : ""}`;
+    return `${formatDroppedDice(dice, sep)} 🚫${vaDeCulo ? " 🍑" : ""}`;
 }
 
 /** «Ana», «Ana y Beto», «Ana, Beto y Carla». */

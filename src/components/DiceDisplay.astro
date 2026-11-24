@@ -16,13 +16,13 @@ export interface Props {
     vaDeCulo?: boolean;
     raw?: number[];
     /**
-     * «Se cayó un dado al piso» 🫳: tiro definitivo del tiro que se cayó (ya normalizado).
+     * «Se cayó un dado al piso» 🚫: tiro definitivo del tiro que se cayó (ya normalizado).
      * Los dados grandes son el re-tiro, que es el que vale, y abajo en chico va el caído
-     * (3 dados y el 4.º como hueco). Con `compact` se ve solo el 🫳 al lado.
+     * (3 dados y el 4.º como hueco). Con `compact` se ve solo el 🚫 al lado.
      */
     dropped?: number[];
     droppedVaDeCulo?: boolean;
-    /** Podio: sin líneas de abajo, solo los íconos (🍑, 🫳) al lado de los dados */
+    /** Podio: sin líneas de abajo, solo los íconos (🍑, 🚫) al lado de los dados */
     compact?: boolean;
 }
 
@@ -65,7 +65,7 @@ const safeClass = color || (isSafe === undefined ? "text-secondary" : (isSafe ? 
     <i class={`${getDieClass(die3)} text-foreground/30 animate-in fade-in zoom-in-95 duration-300 delay-150 hover:scale-110 hover:rotate-6 transition-all duration-300 cursor-default`}></i>
     <i class={`${getDieClass(die4)} text-foreground/30 animate-in fade-in zoom-in-95 duration-300 delay-200 hover:scale-110 hover:-rotate-6 transition-all duration-300 cursor-default`}></i>
     {showFellOnly && (<>
-        <span aria-hidden="true" class="leading-none">🫳</span>
+        <span aria-hidden="true" class="leading-none">🚫</span>
         <span class="sr-only">Se le cayó un dado al piso y tuvo que tirar de nuevo</span>
     </>)}
     {/* El 🍑 va siempre a la derecha, en todas las líneas */}
@@ -87,10 +87,10 @@ const safeClass = color || (isSafe === undefined ? "text-secondary" : (isSafe ? 
     <p tabindex="0" onkeydown="if (event.key === 'Escape') this.blur()" class={`group/caida relative inline-flex items-center gap-1 text-foreground/40 whitespace-nowrap cursor-help rounded-chico focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lutvia-amarillo ${culoTextClasses[size]}`}>
         {!showRaw && <span class="sr-only">Tiro que vale: {finalText}.</span>}
         <i class="fa-solid fa-rotate-left text-[0.75em] mr-0.5" aria-hidden="true"></i>
-        <span aria-hidden="true">🫳</span>
+        <span aria-hidden="true">🚫</span>
         <DroppedDice dice={dropped!} vaDeCulo={droppedVaDeCulo} size="inherit" />
         <span role="tooltip" class="invisible opacity-0 group-hover/caida:visible group-hover/caida:opacity-100 group-focus/caida:visible group-focus/caida:opacity-100 transition-opacity duration-200 absolute z-20 top-full right-0 mt-2 w-56 bg-white border border-lutvia-amarillo/60 rounded-chico shadow-lg p-3 text-left whitespace-normal">
-            <span class="block text-xs font-black text-foreground mb-1"><span aria-hidden="true">🫳</span> Se le cayó un dado al piso</span>
+            <span class="block text-xs font-black text-foreground mb-1"><span aria-hidden="true">🚫</span> Se le cayó un dado al piso</span>
             <span class="block text-[11px] text-foreground/70 leading-snug text-pretty">Ese tiro (el de abajo, con el hueco) no vale para nada: tuvo que tirar de nuevo y cuenta el de arriba.</span>
         </span>
     </p>

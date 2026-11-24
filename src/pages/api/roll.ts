@@ -98,19 +98,19 @@ export async function POST(context: APIContext): Promise<Response> {
 
     const displayName = context.locals.user?.display_name || context.locals.user?.username || "Usuario";
 
-    // «Se cayó un dado al piso» 🫳: un tiro por día se invalida al azar y hay que tirar de nuevo
+    // «Se cayó un dado al piso» 🚫: un tiro por día se invalida al azar y hay que tirar de nuevo
     if (context.locals.user && canDrop(context.locals.user)) {
         let drops = false;
         if (forceDrop) {
             await db.execute({ sql: "DELETE FROM dropped_roll WHERE user_id = ? AND date = ?", args: [userId, dateStr] });
             drops = true;
         } else if (!hadRollToday && !(await hasUserDropToday(db, userId, dateStr))) {
-            // Chance fija e independiente en la primera tirada del día, igual para todos (sin tope por día)
+            // Chance fija en la primera tirada del día, igual para todos (con tope de 2 caídas por día)
             drops = Math.random() < (await getDropProbability(db, dateStr));
         }
         if (drops) {
             const raw: Dice = [d1, d2, d3, d4];
-            if (await claimDrop(db, { userId, dateStr, timeStr, raw, vaDeCulo })) {
+            if (await claimDrop(db, { userId, dateStr, timeStr, raw, vaDeCulo }, { ignoreCap: forceDrop })) {
                 sendDiscordDrop(displayName, raw, vaDeCulo).catch(err => {
                     console.error("Error sending Discord drop:", err);
                 });

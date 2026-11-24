@@ -29,7 +29,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
 	const roll_window_end = formData.get("roll_window_end")?.toString() || "";
 	const auto_verdict_enabled = formData.get("auto_verdict_enabled") === "1";
 	const special_roll_date = formData.get("special_roll_date")?.toString() || "";
-	// «Dado al piso» 🫳: chance por tirada en %; vacía = automática
+	// «Dado al piso» 🚫: chance por tirada en %; vacía = automática
 	const drop_probability = formData.get("drop_probability")?.toString().trim().replace(",", ".") || "";
 
 	if (!isValidTime(roll_window_start) || !isValidTime(roll_window_end)) {

@@ -36,7 +36,7 @@ import { assignDailyChores, chores } from '../utils/chores.js';
 
 const dates = Object.keys(groupedRolls).sort((a, b) => b.localeCompare(a));
 
-// «Se cayó un dado al piso» 🫳: la anécdota de cada día (el tiro caído no cuenta para nada)
+// «Se cayó un dado al piso» 🚫: la anécdota de cada día (el tiro caído no cuenta para nada)
 const dropsByDate = await getDropsBetween(db, dates[dates.length - 1] ?? '0000-01-01', dates[0] ?? '9999-12-31');
 
 // Calculate unique seasons present in history dates and load their exemptions
@@ -400,7 +400,7 @@ const currentSeasonExemptions = await getExemptionsForSeason(db, currentSeasonId
                                                         <div class="flex items-center gap-4">
                                                             {drop && (
                                                                 <span class="sm:hidden text-xs font-bold text-foreground/60 whitespace-nowrap" title="Se le cayó un dado al piso y tuvo que tirar de nuevo">
-                                                                    <span aria-hidden="true">🫳</span>
+                                                                    <span aria-hidden="true">🚫</span>
                                                                     <span class="sr-only">Se le cayó un dado al piso y tuvo que tirar de nuevo.</span>
                                                                 </span>
                                                             )}

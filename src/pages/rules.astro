@@ -288,7 +288,7 @@ const schedule = await getRollSchedule(db);
       aria-labelledby="dados-al-piso-titulo"
     >
       <div class="relative z-10 text-center md:text-left flex flex-col md:flex-row items-center gap-8">
-        <div class="text-7xl group-hover:translate-y-2 group-hover:rotate-12 transition-transform duration-500" aria-hidden="true">🫳</div>
+        <div class="text-7xl group-hover:translate-y-2 group-hover:rotate-12 transition-transform duration-500" aria-hidden="true">🚫</div>
         <div>
           <h3 id="dados-al-piso-titulo" class="text-2xl font-black text-foreground mb-2 text-balance">
             Se cayó un dado al piso
@@ -296,7 +296,7 @@ const schedule = await getRollSchedule(db);
           <p class="text-foreground/80 leading-relaxed max-w-3xl text-pretty mb-4">
             Pasa en las mejores mesas: <strong>casi todos los días</strong>, a alguien se le va un
             dado abajo de la mesa. Ese tiro no vale para nada y le toca <strong>tirar de
-            nuevo</strong> (y puede volver a elegir si va de culo).
+            nuevo</strong>.
           </p>
           <p class="inline-flex items-center justify-center md:justify-start gap-1.5 text-3xl mb-4">
             <span class="sr-only">Por ejemplo, un tiro con tres dados en la mesa y el cuarto en el piso.</span>
@@ -307,8 +307,8 @@ const schedule = await getRollSchedule(db);
           </p>
           <p class="text-sm text-foreground/80 leading-relaxed max-w-3xl text-pretty">
             Se decide en el momento: en tu primera tirada del día tenés la misma chance que
-            cualquiera de que se te escape un dado, tires primero o último. Le puede pasar a varios
-            el mismo día, o a nadie, pero a vos no dos veces. Queda la anécdota en el ranking, el
+            cualquiera de que se te escape un dado, tires primero o último. Le puede pasar a
+            dos por día como mucho (o a nadie), y a vos no dos veces. Queda la anécdota en el ranking, el
             historial y Discord.
           </p>
         </div>

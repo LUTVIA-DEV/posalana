@@ -2,13 +2,14 @@ import type { Client } from "@libsql/client";
 import { normalizeRoll, type Dice } from "./dice.js";
 
 /**
- * «Se cayó un dado al piso» 🫳: a veces a alguien se le va un dado abajo de la
+ * «Se cayó un dado al piso» 🚫: a veces a alguien se le va un dado abajo de la
  * mesa y tiene que tirar de nuevo. Se decide en el momento de la tirada.
  *
  * - **Chance fija e independiente:** en la primera tirada del día de cada jugador hay una
  *   chance `p` de que se caiga un dado al piso, la misma para todos: no depende del jugador,
- *   de su asistencia ni del orden de llegada. No hay tope por día: se pueden caer varios
- *   o ninguno. A un mismo jugador no se le caen dos veces el mismo día (el re-tiro no sortea).
+ *   de su asistencia ni del orden de llegada.
+ * - **Topes:** como mucho `MAX_DROPS_PER_DAY` (2) caídas por día y una sola por jugador (el
+ *   re-tiro no sortea). Cuando ya hubo 2, el resto del día tira tranquilo.
  * - **Cuánto vale p:** si el admin la fijó (`settings.drop_probability`, en %), esa. Si no,
  *   `p = 1 − (1 − DAILY_TARGET)^(1/n)`, para que hasta en un día flojo haya al menos una
  *   caída con chance `DAILY_TARGET` (90 %). `n` es el piso de asistencia: el percentil 10
@@ -21,6 +22,8 @@ import { normalizeRoll, type Dice } from "./dice.js";
  */
 
 export const DAILY_TARGET = 0.9;
+/** Como mucho, a cuántos jugadores se les puede caer un dado al piso en el mismo día */
+export const MAX_DROPS_PER_DAY = 2;
 export const P_MIN = 0.05;
 export const P_MAX = 0.5;
 export const ATTENDANCE_DAYS = 20;
@@ -91,18 +94,22 @@ export async function hasUserDropToday(db: Client, userId: string, dateStr: stri
 }
 
 /**
- * Registra la caída. Devuelve `true` si se guardó (el `UNIQUE(user_id, date)` impide
- * que al mismo jugador se le caigan dos veces el mismo día).
+ * Registra la caída. Devuelve `true` si se guardó. Es un solo INSERT condicional, así que es
+ * atómico: no pasa si ese día ya hay `MAX_DROPS_PER_DAY` caídas, y el `UNIQUE(user_id, date)`
+ * impide que al mismo jugador se le caiga dos veces. `ignoreCap` es solo para forzarla en local.
  */
 export async function claimDrop(
     db: Client,
-    data: { userId: string; dateStr: string; timeStr: string; raw: Dice; vaDeCulo: boolean }
+    data: { userId: string; dateStr: string; timeStr: string; raw: Dice; vaDeCulo: boolean },
+    options: { ignoreCap?: boolean } = {}
 ): Promise<boolean> {
     const id = Math.random().toString(36).substring(2, 15);
+    const cap = options.ignoreCap ? Number.MAX_SAFE_INTEGER : MAX_DROPS_PER_DAY;
     const res = await db.execute({
         sql: `INSERT OR IGNORE INTO dropped_roll (id, user_id, date, time, die1, die2, die3, die4, va_de_culo)
-              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        args: [id, data.userId, data.dateStr, data.timeStr, ...data.raw, data.vaDeCulo ? 1 : 0]
+              SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?
+              WHERE (SELECT COUNT(*) FROM dropped_roll WHERE date = ?) < ?`,
+        args: [id, data.userId, data.dateStr, data.timeStr, ...data.raw, data.vaDeCulo ? 1 : 0, data.dateStr, cap]
     });
     return res.rowsAffected === 1;
 }

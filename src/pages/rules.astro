@@ -111,8 +111,8 @@ const kicker = "font-bold uppercase tracking-widest text-xs mb-3 flex items-cent
       <div class={`${card} border-secondary/30`}>
         <div class={`${watermark} text-secondary/10`} aria-hidden="true"><i class="fa-solid fa-stopwatch"></i></div>
         <p class={`${kicker} text-secondary`}>🎲 Tiración</p>
-        <p class="text-2xl lg:text-3xl font-black text-foreground mb-2 tabular-nums leading-tight whitespace-nowrap">
-          {schedule.start}<span class="text-foreground/30 font-normal text-xl"> a </span>{schedule.end}
+        <p class="flex flex-wrap items-baseline gap-x-2 text-3xl font-black text-foreground mb-2 tabular-nums leading-tight">
+          <span>{schedule.start}</span><span class="whitespace-nowrap"><span class="text-foreground/30 font-normal text-xl">a</span> {schedule.end}</span>
         </p>
         <p class="text-sm text-foreground/70 relative z-10 text-pretty">
           Fuera de ese horario la app no deja tirar. Si no tiraste antes del cierre, ese día no jugás.
@@ -123,8 +123,8 @@ const kicker = "font-bold uppercase tracking-widest text-xs mb-3 flex items-cent
       <div class={`${card} border-primary/30`}>
         <div class={`${watermark} text-primary/10`} aria-hidden="true"><i class="fa-solid fa-utensils"></i></div>
         <p class={`${kicker} text-primary`}>🍽️ Llevación</p>
-        <p class="text-2xl lg:text-3xl font-black text-foreground mb-2 tabular-nums leading-tight whitespace-nowrap">
-          12:30<span class="text-foreground/30 font-normal text-xl"> a </span>13:00
+        <p class="flex flex-wrap items-baseline gap-x-2 text-3xl font-black text-foreground mb-2 tabular-nums leading-tight">
+          <span>12:30</span><span class="whitespace-nowrap"><span class="text-foreground/30 font-normal text-xl">a</span> 13:00</span>
         </p>
         <p class="text-sm text-foreground/70 relative z-10 text-pretty">
           Si no llegás antes de las 13:00, no jugás.
@@ -186,10 +186,10 @@ const kicker = "font-bold uppercase tracking-widest text-xs mb-3 flex items-cent
       </div>
     </section>
 
-    <!-- Bento 3: temporadas, veredicto y llegadas tarde -->
+    <!-- Bento 3: temporadas y veredicto -->
     <section class="grid grid-cols-1 md:grid-cols-4 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-300 ease-out">
       <!-- Temporadas -->
-      <div class={`${card} border-foreground/10 md:col-span-2`}>
+      <div class={`${card} border-foreground/10 md:col-span-3`}>
         <div class={`${watermark} text-foreground/5`} aria-hidden="true"><i class="fa-solid fa-trophy"></i></div>
         <h3 class={`${kicker} text-foreground/70`}><i class="fa-solid fa-calendar-week text-secondary" aria-hidden="true"></i> Temporadas</h3>
         <ul class="space-y-2 text-sm text-foreground/80 list-disc pl-5 relative z-10">
@@ -212,23 +212,10 @@ const kicker = "font-bold uppercase tracking-widest text-xs mb-3 flex items-cent
       <div class={`${card} border-primary/30`}>
         <div class={`${watermark} text-primary/10`} aria-hidden="true"><i class="fa-solid fa-bullhorn"></i></div>
         <p class={`${kicker} text-primary`}>📜 Veredicto</p>
-        <p class="text-2xl lg:text-3xl font-black text-foreground mb-2 tabular-nums leading-tight whitespace-nowrap">{schedule.end}</p>
+        <p class="text-3xl font-black text-foreground mb-2 tabular-nums leading-tight">{schedule.end}</p>
         <p class="text-sm text-foreground/70 relative z-10 text-pretty">
           La mesa se cierra y el veredicto final sale solo en Discord. Si ese día nadie tiró, no
           se publica nada.
-        </p>
-      </div>
-
-      <!-- Llegadas tarde -->
-      <div class={`${card} border-foreground/10`}>
-        <div class={`${watermark} text-foreground/5`} aria-hidden="true"><i class="fa-solid fa-clock-rotate-left"></i></div>
-        <p class={`${kicker} text-foreground/70`}><i class="fa-solid fa-clock-rotate-left text-primary" aria-hidden="true"></i> Llegadas tarde</p>
-        <p class="text-sm text-foreground/80 mb-2 relative z-10 text-pretty">
-          Llegar después de las <strong>10:15</strong> sin aviso excluye de la tirada e implica
-          <strong class="text-primary">lavar los platos directamente</strong>.
-        </p>
-        <p class="text-sm text-foreground/70 relative z-10 text-pretty">
-          Si llegan varios tarde, las tareas se reparten según el orden de llegada.
         </p>
       </div>
     </section>

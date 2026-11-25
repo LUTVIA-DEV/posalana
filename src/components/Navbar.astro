@@ -287,6 +287,46 @@ if (lastLomitoDate) {
         animation-delay: 0.45s;
     }
 
+    /* «Va de culo» 🍑: con el switch prendido, las sílabas ruedan como en el hover pero frenan a
+       media vuelta y quedan dadas vuelta. Al apagarlo terminan la vuelta (de 180° a 360°).
+       Van después del hover para ganarle mientras dura. */
+    .logo-container.logo-de-culo .logo-syllable {
+        animation: roll-die-culo 1.0s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+    }
+    .logo-container.logo-de-culo-off .logo-syllable {
+        animation: roll-die-culo-off 1.0s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+    }
+    .logo-container.logo-de-culo .syllable-2,
+    .logo-container.logo-de-culo-off .syllable-2 {
+        animation-delay: 0.15s;
+    }
+    .logo-container.logo-de-culo .syllable-3,
+    .logo-container.logo-de-culo-off .syllable-3 {
+        animation-delay: 0.3s;
+    }
+    .logo-container.logo-de-culo .syllable-4,
+    .logo-container.logo-de-culo-off .syllable-4 {
+        animation-delay: 0.45s;
+    }
+
+    @keyframes roll-die-culo {
+        0% {
+            transform: rotateX(0deg);
+        }
+        100% {
+            transform: rotateX(180deg);
+        }
+    }
+
+    @keyframes roll-die-culo-off {
+        0% {
+            transform: rotateX(180deg);
+        }
+        100% {
+            transform: rotateX(360deg);
+        }
+    }
+
     @keyframes roll-die {
         0% {
             transform: rotateX(0deg);

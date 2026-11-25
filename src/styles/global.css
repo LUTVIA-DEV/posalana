@@ -316,13 +316,3 @@ html.is-navigating {
 @utility animate-sello-anulado {
   animation: sello-anulado 0.7s cubic-bezier(0.2, 0.8, 0.3, 1.2) 0.9s both;
 }
-
-/* «Va de culo» 🍑: con el switch prendido, el logo de la navbar se da vuelta (gira 180°).
-   Con prefers-reduced-motion la regla global deja la transición en ~0, así que cambia de una. */
-.logo-container {
-  transition: transform 0.7s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-.logo-container.logo-de-culo {
-  transform: rotate(180deg);
-}

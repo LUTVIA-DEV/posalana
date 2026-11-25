@@ -660,7 +660,20 @@ const savedPlayers = sortedRolls.filter(r => rollChoreMap.get(r.id)?.code === 'N
                     const culoSwitch = document.getElementById('va-de-culo');
                     const logo = document.querySelector('.logo-container');
                     if (!logo) return;
-                    const sync = () => logo.classList.toggle('logo-de-culo', !!culoSwitch?.checked);
+                    let offTimer;
+                    const sync = () => {
+                        const on = !!culoSwitch?.checked;
+                        clearTimeout(offTimer);
+                        if (on) {
+                            logo.classList.remove('logo-de-culo-off');
+                            logo.classList.add('logo-de-culo');
+                        } else if (logo.classList.contains('logo-de-culo')) {
+                            // Termina la vuelta y después le devuelve el hover de siempre
+                            logo.classList.remove('logo-de-culo');
+                            logo.classList.add('logo-de-culo-off');
+                            offTimer = setTimeout(() => logo.classList.remove('logo-de-culo-off'), 1600);
+                        }
+                    };
                     culoSwitch?.addEventListener('change', sync);
                     sync();
                 }

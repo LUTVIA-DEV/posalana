@@ -6,6 +6,11 @@ import UserAvatar from '../components/UserAvatar.astro';
 import DiceDisplay from '../components/DiceDisplay.astro';
 import ScheduleNotice from '../components/ScheduleNotice.astro';
 import { formatDate } from '../utils/date.js';
+import { normalizeRoll } from '../utils/dice.js';
+import { devUnlimitedRolls } from '../utils/dev.js';
+import { DROPPED_DIE_INDEX, getDropsForDate } from '../utils/drop.js';
+import DroppedDice from '../components/DroppedDice.astro';
+import PodiumBadges from '../components/PodiumBadges.astro';
 import { getArgentinaNow, getNextPlayDay, getRollSchedule, getRollWindowStatus, SCHEDULE_NOTICE_UNTIL } from '../utils/schedule.js';
 
 if (!Astro.locals.user) {
@@ -20,7 +25,9 @@ const dateStr = now.dateStr;
 const schedule = await getRollSchedule(db);
 const windowStatus = getRollWindowStatus(schedule, now.minutes, dateStr);
 const nextPlay = getNextPlayDay(schedule, dateStr);
-const canRoll = windowStatus === 'open' || user.role === 'tester';
+// Modo desarrollo (DEV_UNLIMITED_ROLLS=1, solo en local): se tira siempre y las veces que quieras
+const unlimitedRolls = devUnlimitedRolls();
+const canRoll = windowStatus === 'open' || user.role === 'tester' || unlimitedRolls;
 const showScheduleNotice = dateStr <= SCHEDULE_NOTICE_UNTIL;
 
 // Check if user rolled
@@ -29,20 +36,36 @@ const userRollRes = await db.execute({
     args: [user.id, dateStr]
 });
 const hasRolled = userRollRes.rows.length > 0;
-const myRoll = hasRolled ? userRollRes.rows[0] : null;
+const myRoll = hasRolled ? normalizeRoll(userRollRes.rows[0]) : null;
 
 // Get all rolls for today, ordered by rules
 const allRollsRes = await db.execute({
     sql: `
-        SELECT r.*, u.username, u.display_name, u.avatar_url 
+        SELECT r.*, r.rowid AS roll_seq, u.username, u.display_name, u.avatar_url 
         FROM roll r
         JOIN user u ON r.user_id = u.id
         WHERE r.date = ?
-        ORDER BY r.die1 ASC, r.die2 ASC, r.die3 ASC, r.die4 ASC
     `,
     args: [dateStr]
 });
-const allRolls = allRollsRes.rows;
+// Tiro definitivo (con «va de culo» ya aplicado); el orden lo da assignDailyChores
+const allRolls = allRollsRes.rows.map(normalizeRoll);
+
+// «Se cayó un dado al piso» 🚫: los tiros invalidados de hoy (pueden ser varios) y si uno fue el tuyo
+const todayDrops = await getDropsForDate(db, dateStr);
+const rolledUserIds = new Set(allRolls.map(r => String(r.user_id)));
+const myDrop = todayDrops.find(d => String(d.user_id) === String(user.id)) ?? null;
+// Recién se cayó (venís del redirect de /api/roll): el dado se cae con animación
+const justDropped = !!myDrop && !hasRolled && Astro.url.searchParams.get('caida') === '1';
+const diceWords = ['one', 'two', 'three', 'four', 'five', 'six'];
+const dropDice = (d: (typeof todayDrops)[number]) => [d.die1, d.die2, d.die3, d.die4] as number[];
+// Props de DiceDisplay para mostrar el tiro caído de un jugador (igual que «va de culo»)
+const dropByUser = new Map(todayDrops.map(d => [String(d.user_id), d]));
+const dropProps = (userId: unknown) => {
+    const d = dropByUser.get(String(userId));
+    return d ? { dropped: dropDice(d), droppedVaDeCulo: d.va_de_culo } : {};
+};
+
 
 const chores = [
     { label: "Lava los platos", code: "LA", emoji: "🧽" },
@@ -89,11 +112,12 @@ const savedPlayers = sortedRolls.filter(r => rollChoreMap.get(r.id)?.code === 'N
                         <div class="flex flex-col items-center mb-3 text-center animate-in fade-in slide-in-from-bottom-2 duration-500 w-full">
                             <div class="relative group cursor-pointer">
                                 <UserAvatar user={{ username: assignedPO.username, display_name: assignedPO.display_name, avatar_url: assignedPO.avatar_url }} size="lg" border={true} />
+                                <PodiumBadges vaDeCulo={assignedPO.va_de_culo} dropped={dropByUser.has(String(assignedPO.user_id))} />
                             </div>
 
                             <!-- Dice Roll -->
-                            <div class="mt-2 flex justify-center">
-                                <DiceDisplay die1={assignedPO.die1 as number} die2={assignedPO.die2 as number} die3={assignedPO.die3 as number} die4={assignedPO.die4 as number} size="sm" color="text-primary" />
+                            <div class="mt-3.5 flex justify-center">
+                                <DiceDisplay die1={assignedPO.die1 as number} die2={assignedPO.die2 as number} die3={assignedPO.die3 as number} die4={assignedPO.die4 as number} vaDeCulo={assignedPO.va_de_culo} {...dropProps(assignedPO.user_id)} compact size="podio" color="text-primary" />
                             </div>
 
                             <span class="font-black text-foreground text-xs sm:text-sm mt-2 block text-center leading-tight px-1">{assignedPO.display_name}</span>
@@ -118,11 +142,12 @@ const savedPlayers = sortedRolls.filter(r => rollChoreMap.get(r.id)?.code === 'N
                         <div class="flex flex-col items-center mb-3 text-center animate-in fade-in slide-in-from-bottom-2 duration-500 w-full">
                             <div class="relative group cursor-pointer">
                                 <UserAvatar user={{ username: assignedSA.username, display_name: assignedSA.display_name, avatar_url: assignedSA.avatar_url }} size="lg" border={true} />
+                                <PodiumBadges vaDeCulo={assignedSA.va_de_culo} dropped={dropByUser.has(String(assignedSA.user_id))} />
                             </div>
                             
                             <!-- Dice Roll -->
-                            <div class="mt-2 flex justify-center">
-                                <DiceDisplay die1={assignedSA.die1 as number} die2={assignedSA.die2 as number} die3={assignedSA.die3 as number} die4={assignedSA.die4 as number} size="sm" color="text-secondary" />
+                            <div class="mt-3.5 flex justify-center">
+                                <DiceDisplay die1={assignedSA.die1 as number} die2={assignedSA.die2 as number} die3={assignedSA.die3 as number} die4={assignedSA.die4 as number} vaDeCulo={assignedSA.va_de_culo} {...dropProps(assignedSA.user_id)} compact size="podio" color="text-secondary" />
                             </div>
 
                             <span class="font-black text-foreground text-xs sm:text-sm mt-2 block text-center leading-tight px-1">{assignedSA.display_name}</span>
@@ -147,11 +172,12 @@ const savedPlayers = sortedRolls.filter(r => rollChoreMap.get(r.id)?.code === 'N
                         <div class="flex flex-col items-center mb-3 text-center animate-in fade-in slide-in-from-bottom-3 duration-500 w-full">
                             <div class="relative group cursor-pointer">
                                 <UserAvatar user={{ username: assignedLA.username, display_name: assignedLA.display_name, avatar_url: assignedLA.avatar_url }} size="lg" border={true} />
+                                <PodiumBadges vaDeCulo={assignedLA.va_de_culo} dropped={dropByUser.has(String(assignedLA.user_id))} />
                             </div>
 
                             <!-- Dice Roll -->
-                            <div class="mt-2 flex justify-center">
-                                <DiceDisplay die1={assignedLA.die1 as number} die2={assignedLA.die2 as number} die3={assignedLA.die3 as number} die4={assignedLA.die4 as number} size="sm" color="text-accent" />
+                            <div class="mt-3.5 flex justify-center">
+                                <DiceDisplay die1={assignedLA.die1 as number} die2={assignedLA.die2 as number} die3={assignedLA.die3 as number} die4={assignedLA.die4 as number} vaDeCulo={assignedLA.va_de_culo} {...dropProps(assignedLA.user_id)} compact size="podio" color="text-accent" />
                             </div>
 
                             <span class="font-black text-foreground text-xs sm:text-sm mt-2 block text-center leading-tight px-1">{assignedLA.display_name}</span>
@@ -197,11 +223,12 @@ const savedPlayers = sortedRolls.filter(r => rollChoreMap.get(r.id)?.code === 'N
                 </div>
                 <div class="flex items-center gap-3 bg-secondary/5 border border-secondary/20 px-4 py-2 rounded-chico shadow-inner">
                     <p class="text-xs text-secondary font-bold uppercase tracking-wider mr-2 hidden md:block">Tu Suerte:</p>
-                    <DiceDisplay die1={myRoll.die1 as number} die2={myRoll.die2 as number} die3={myRoll.die3 as number} die4={myRoll.die4 as number} size="lg" />
+                    <DiceDisplay die1={myRoll.die1 as number} die2={myRoll.die2 as number} die3={myRoll.die3 as number} die4={myRoll.die4 as number} raw={myRoll.raw_dice} vaDeCulo={myRoll.va_de_culo} {...dropProps(user.id)} size="lg" />
                 </div>
             </section>
-        ) : (
-            <section class="relative bg-white border border-foreground/10 p-8 md:p-12 rounded-3xl shadow-xl overflow-hidden text-center group animate-in fade-in slide-in-from-bottom-4 duration-500 delay-150 ease-out hover-card-lift">
+        ) : null}
+        {(!hasRolled || unlimitedRolls) && (
+            <section class:list={["relative bg-white border border-foreground/10 p-8 md:p-12 rounded-3xl shadow-xl overflow-hidden text-center group animate-in fade-in slide-in-from-bottom-4 duration-500 delay-150 ease-out hover-card-lift", hasRolled && "mt-4"]}>
                 <!-- Decorative Background Element -->
                 <div class="absolute -top-24 -right-24 w-64 h-64 bg-secondary/10 rounded-pildora blur-3xl group-hover:bg-secondary/20 transition-all duration-700 pointer-events-none"></div>
                 <div class="absolute -bottom-24 -left-24 w-64 h-64 bg-accent/10 rounded-pildora blur-3xl group-hover:bg-accent/20 transition-all duration-700 pointer-events-none"></div>
@@ -209,6 +236,15 @@ const savedPlayers = sortedRolls.filter(r => rollChoreMap.get(r.id)?.code === 'N
                 <div class="relative z-10">
                     <p class="text-secondary font-bold tracking-widest uppercase text-xs mb-2">Tirada Oficial</p>
                     <h2 class="text-4xl md:text-5xl font-black mb-2 tracking-tight text-foreground text-balance">{formatDate(dateStr)}</h2>
+                    {myDrop && !hasRolled && (
+                        <div role={justDropped ? "alert" : undefined} class:list={["mx-auto max-w-md my-6 bg-lutvia-amarillo/15 border-2 border-lutvia-amarillo/60 rounded-bloque px-5 py-4", justDropped && "animate-in fade-in zoom-in-95 duration-300"]}>
+                            <p class="text-lg font-black text-foreground tracking-tight text-balance"><span aria-hidden="true">🚫</span> ¡Se te cayó un dado al piso!</p>
+                            <div class="my-3 flex justify-center">
+                                <DroppedDice dice={dropDice(myDrop)} vaDeCulo={myDrop.va_de_culo} size="lg" />
+                            </div>
+                            <p class="text-sm text-foreground/70 font-medium text-pretty">Ese tiro no vale. Juntalo y <strong>tirá de nuevo</strong>.</p>
+                        </div>
+                    )}
                     {canRoll ? (
                     <>
                     <p class="text-foreground/60 mb-3 max-w-md mx-auto text-pretty">El destino no está escrito, se decide con los dados. ¿Zafás o lavás?</p>
@@ -216,7 +252,7 @@ const savedPlayers = sortedRolls.filter(r => rollChoreMap.get(r.id)?.code === 'N
                         <i class="fa-regular fa-clock"></i> La tirada cierra a las {schedule.end}
                     </p>
 
-                    <form method="post" action="/api/roll" id="roll-form">
+                    <form method="post" action="/api/roll" id="roll-form" class="flex flex-col items-center gap-4">
                         <button type="submit" id="roll-button" class="relative overflow-hidden bg-secondary text-background px-10 py-5 rounded-pildora text-xl font-bold shadow-[0_8px_30px_rgba(0,204,204,0.3)] hover:shadow-[0_8px_40px_rgba(0,204,204,0.5)] hover:-translate-y-1 active:translate-y-0 active:shadow-[0_4px_15px_rgba(0,204,204,0.3)] transition-all duration-300 cursor-pointer group">
                             <span class="relative z-10 flex items-center justify-center gap-3" id="roll-button-content">
                                 <i class="fa-solid fa-dice text-2xl group-hover:rotate-180 transition-transform duration-500" id="roll-icon"></i>
@@ -225,6 +261,42 @@ const savedPlayers = sortedRolls.filter(r => rollChoreMap.get(r.id)?.code === 'N
                             <!-- Hover gradient overlay -->
                             <div class="absolute inset-0 bg-gradient-to-r from-transparent via-background/20 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
                         </button>
+                        {unlimitedRolls && (
+                            <label class="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-foreground/40 cursor-pointer select-none">
+                                <input type="checkbox" name="forzar_caida" value="1" class="accent-[var(--lutvia-oscuro)]" />
+                                <i class="fa-solid fa-flask" aria-hidden="true"></i> Forzar dado al piso (dev)
+                            </label>
+                        )}
+                        <!-- «Va de culo» 🍑: se canta antes de tirar; el servidor da vuelta los dados (7 − x) -->
+                        <div class="relative inline-flex items-center gap-2 bg-white border-2 border-foreground/10 hover:border-accent/40 has-[:checked]:border-accent has-[:checked]:bg-accent/10 has-[:checked]:shadow-[0_4px_16px_rgba(204,102,255,0.25)] pl-1.5 pr-1.5 py-1.5 rounded-pildora shadow-sm transition-all duration-300">
+                        <label for="va-de-culo" class="group/switch inline-flex items-center gap-2 cursor-pointer select-none">
+                            <input type="checkbox" role="switch" id="va-de-culo" name="va_de_culo" value="1" aria-describedby="va-de-culo-ayuda" class="peer sr-only" />
+                            <!-- Interruptor -->
+                            <span aria-hidden="true" class="relative w-10 h-6 shrink-0 rounded-pildora bg-foreground/15 group-hover/switch:bg-foreground/25 peer-checked:bg-accent peer-checked:group-hover/switch:bg-accent peer-focus-visible:ring-2 peer-focus-visible:ring-accent peer-focus-visible:ring-offset-2 transition-colors duration-300 after:content-[''] after:absolute after:top-1 after:left-1 after:w-4 after:h-4 after:rounded-pildora after:bg-white after:shadow after:transition-transform after:duration-300 peer-checked:after:translate-x-4"></span>
+                            <span class="text-sm font-black text-foreground/70 peer-checked:text-accent transition-colors tracking-tight">Va de culo</span>
+                            <span aria-hidden="true" class="text-lg inline-block transition-transform duration-500 peer-checked:rotate-180">🍑</span>
+                        </label>
+                        <!-- Tooltip «¿Qué es?»: se abre al pasar el mouse, con el foco (Tab) o tocándolo en el celu -->
+                        <div class="group/ayuda flex">
+                            <button type="button" onkeydown="if (event.key === 'Escape') this.blur()" aria-label="¿Qué es «va de culo»?" aria-describedby="va-de-culo-ayuda" class="w-6 h-6 flex items-center justify-center leading-none text-[10px] rounded-pildora bg-foreground/5 text-foreground/60 hover:text-accent hover:bg-accent/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 transition-colors cursor-help">
+                                <i class="fa-solid fa-question leading-none" aria-hidden="true"></i>
+                            </button>
+                            <div id="va-de-culo-ayuda" role="tooltip" class="invisible opacity-0 group-hover/ayuda:visible group-hover/ayuda:opacity-100 group-focus-within/ayuda:visible group-focus-within/ayuda:opacity-100 transition-opacity duration-200 absolute z-20 bottom-full left-1/2 -translate-x-1/2 mb-2 w-52 bg-white border border-accent/30 rounded-chico shadow-lg p-3 text-left">
+                                <p class="text-xs font-black text-accent mb-1">Va de culo <span aria-hidden="true">🍑</span></p>
+                                <p class="text-[11px] text-foreground/80 leading-snug text-pretty mb-2">Como en la generala: si la cantás <strong>antes de tirar</strong>, cada dado se lee por la cara de abajo. Cuenta el tiro dado vuelta para todo.</p>
+                                <p class="flex items-center justify-center gap-1.5 text-base bg-accent/5 rounded-chico py-1.5" aria-hidden="true">
+                                    <i class="fa-solid fa-dice-one text-foreground/40"></i>
+                                    <i class="fa-solid fa-arrow-right text-xs text-accent"></i>
+                                    <i class="fa-solid fa-dice-six text-accent"></i>
+                                    <span class="w-2"></span>
+                                    <i class="fa-solid fa-dice-two text-foreground/40"></i>
+                                    <i class="fa-solid fa-arrow-right text-xs text-accent"></i>
+                                    <i class="fa-solid fa-dice-five text-accent"></i>
+                                </p>
+                                <p class="text-[10px] text-foreground/60 mt-2 text-pretty">¿Da más suerte? Ni un poquito. Es pura cábala.</p>
+                            </div>
+                        </div>
+                        </div>
                     </form>
                     </>
                     ) : windowStatus === 'no-play' ? (
@@ -253,6 +325,9 @@ const savedPlayers = sortedRolls.filter(r => rollChoreMap.get(r.id)?.code === 'N
                             <span class="text-sm text-foreground/60 font-medium">Volvé {nextPlay.label} de {schedule.start} a {schedule.end}</span>
                         </div>
                     </>
+                    )}
+                    {unlimitedRolls && (
+                        <p class="mt-6 text-[10px] font-bold uppercase tracking-widest text-foreground/40"><i class="fa-solid fa-flask mr-1" aria-hidden="true"></i> Modo desarrollo: tiradas sin límite</p>
                     )}
                 </div>
             </section>
@@ -354,7 +429,7 @@ const savedPlayers = sortedRolls.filter(r => rollChoreMap.get(r.id)?.code === 'N
                             <div class={`group flex flex-col sm:flex-row sm:items-center justify-between p-5 rounded-chico border transition-all duration-300 hover:shadow-md ${config.bg}`}>
                                 
                                 <!-- User Info & Time -->
-                                <div class="flex items-center gap-4 mb-4 sm:mb-0 w-full sm:w-auto">
+                                <div class="flex items-center gap-4 mb-4 sm:mb-0 w-full sm:w-auto sm:self-start">
                                     <UserAvatar user={roll as any} size="lg" border={true} />
                                     <div class="flex-grow">
                                         <div class="flex flex-wrap items-center gap-2">
@@ -385,7 +460,7 @@ const savedPlayers = sortedRolls.filter(r => rollChoreMap.get(r.id)?.code === 'N
                                 </div>
 
                                 <div class="flex items-center justify-center sm:justify-end bg-white/50 sm:bg-transparent p-4 sm:p-0 rounded-chico w-full sm:w-auto mt-2 sm:mt-0">
-                                    <DiceDisplay die1={roll.die1 as number} die2={roll.die2 as number} die3={roll.die3 as number} die4={roll.die4 as number} size="xl" color={config.diceColor} />
+                                    <DiceDisplay die1={roll.die1 as number} die2={roll.die2 as number} die3={roll.die3 as number} die4={roll.die4 as number} raw={roll.raw_dice} vaDeCulo={roll.va_de_culo} {...dropProps(roll.user_id)} size="xl" color={config.diceColor} />
                                 </div>
                             </div>
                         )
@@ -504,7 +579,107 @@ const savedPlayers = sortedRolls.filter(r => rollChoreMap.get(r.id)?.code === 'N
                     }
                 }
 
+                // «Va de culo» 🍑: después de sacudirse, los dados se frenan y se dan vuelta uno por uno
+                // (cada uno gira y muestra su cara opuesta, 7 − x) mientras el durazno da una vuelta.
+                // Con prefers-reduced-motion no hay giros: las caras cambian de una y listo.
+                function playVaDeCulo(overlay, diceIcons, diceWords, faceChangeInterval, statusText, submit) {
+                    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+                    const kicker = document.getElementById('overlay-kicker');
+                    const peach = document.getElementById('overlay-culo');
+                    const setFace = (icon, value) => {
+                        diceWords.forEach(word => icon.classList.remove(`fa-dice-${word}`));
+                        icon.classList.add(`fa-dice-${diceWords[value - 1]}`);
+                    };
+
+                    if (kicker) {
+                        kicker.textContent = '¡Cantó va de culo!';
+                        kicker.classList.replace('text-secondary', 'text-accent');
+                    }
+                    const subtitle = document.getElementById('overlay-subtitle');
+                    if (subtitle) subtitle.textContent = 'Cada dado se lee por la cara de abajo. ¡Que la cábala te acompañe!';
+                    if (peach) {
+                        peach.classList.remove('hidden');
+                        peach.classList.add('inline-block');
+                        if (!reduce) {
+                            peach.animate([
+                                { transform: 'scale(0) rotate(-30deg)' },
+                                { transform: 'scale(1.25) rotate(10deg)', offset: 0.6 },
+                                { transform: 'scale(1) rotate(0deg)' }
+                            ], { duration: 500, easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)' });
+                        }
+                    }
+
+                    // A los 1000 ms se frenan: quedan quietos con una cara cualquiera
+                    setTimeout(() => {
+                        clearInterval(faceChangeInterval);
+                        const faces = Array.from(diceIcons, icon => {
+                            icon.classList.remove('animate-shake-roll');
+                            const value = Math.floor(Math.random() * 6) + 1;
+                            setFace(icon, value);
+                            return value;
+                        });
+                        if (statusText) statusText.textContent = 'Dando vuelta los dados...';
+
+                        if (reduce) {
+                            diceIcons.forEach((icon, i) => setFace(icon, 7 - faces[i]));
+                            return;
+                        }
+
+                        // El durazno gira y cada dado se da vuelta: sube, gira hasta quedar de canto,
+                        // cambia a la cara opuesta y termina de girar
+                        peach?.animate([
+                            { transform: 'rotate(0deg) scale(1)' },
+                            { transform: 'rotate(180deg) scale(1.3)', offset: 0.5 },
+                            { transform: 'rotate(360deg) scale(1)' }
+                        ], { duration: 900, easing: 'ease-in-out' });
+
+                        diceIcons.forEach((icon, i) => {
+                            const delay = 150 + i * 160;
+                            icon.animate([
+                                { transform: 'translateY(0) rotateX(0deg)' },
+                                { transform: 'translateY(-28px) rotateX(90deg)' }
+                            ], { duration: 220, delay, easing: 'ease-in', fill: 'forwards' }).onfinish = () => {
+                                setFace(icon, 7 - faces[i]);
+                                icon.animate([
+                                    { transform: 'translateY(-28px) rotateX(-90deg)' },
+                                    { transform: 'translateY(0) rotateX(0deg)' }
+                                ], { duration: 320, easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)', fill: 'forwards' });
+                            };
+                        });
+                    }, 1000);
+
+                    setTimeout(() => {
+                        if (statusText) statusText.textContent = '¡Fue de culo!';
+                    }, 2150);
+
+                    setTimeout(submit, reduce ? 1800 : 2700);
+                }
+
+                // «Va de culo» 🍑: con el switch prendido, el logo de la navbar queda dado vuelta
+                function setupLogoDeCulo() {
+                    const culoSwitch = document.getElementById('va-de-culo');
+                    const logo = document.querySelector('.logo-container');
+                    if (!logo) return;
+                    let offTimer;
+                    const sync = () => {
+                        const on = !!culoSwitch?.checked;
+                        clearTimeout(offTimer);
+                        if (on) {
+                            logo.classList.remove('logo-de-culo-off');
+                            logo.classList.add('logo-de-culo');
+                        } else if (logo.classList.contains('logo-de-culo')) {
+                            // Termina la vuelta y después le devuelve el hover de siempre
+                            logo.classList.remove('logo-de-culo');
+                            logo.classList.add('logo-de-culo-off');
+                            offTimer = setTimeout(() => logo.classList.remove('logo-de-culo-off'), 1600);
+                        }
+                    };
+                    culoSwitch?.addEventListener('change', sync);
+                    sync();
+                }
+
                 function setupRollAnimation() {
+                    setupLogoDeCulo();
                     const rollForm = document.getElementById('roll-form');
                     const rollButton = document.getElementById('roll-button');
                     const rollOverlay = document.getElementById('roll-overlay');
@@ -523,7 +698,7 @@ const savedPlayers = sortedRolls.filter(r => rollChoreMap.get(r.id)?.code === 'N
                             rollButton.classList.add('opacity-50', 'cursor-not-allowed');
                             
                             // Animate overlay dice faces
-                            const diceIcons = rollOverlay.querySelectorAll('.flex i');
+                            const diceIcons = rollOverlay.querySelectorAll('#overlay-dice i');
                             const diceWords = ['one', 'two', 'three', 'four', 'five', 'six'];
                             
                             const faceChangeInterval = setInterval(() => {
@@ -538,7 +713,13 @@ const savedPlayers = sortedRolls.filter(r => rollChoreMap.get(r.id)?.code === 'N
                             setTimeout(() => {
                                 if (overlayStatusText) overlayStatusText.textContent = 'Calculando trayectorias...';
                             }, 500);
-                            
+
+                            const vaDeCulo = document.getElementById('va-de-culo')?.checked;
+                            if (vaDeCulo) {
+                                playVaDeCulo(rollOverlay, diceIcons, diceWords, faceChangeInterval, overlayStatusText, () => rollForm.submit());
+                                return;
+                            }
+
                             setTimeout(() => {
                                 if (overlayStatusText) overlayStatusText.textContent = 'Escribiendo el destino...';
                             }, 1000);
@@ -572,13 +753,64 @@ const savedPlayers = sortedRolls.filter(r => rollChoreMap.get(r.id)?.code === 'N
         
         {showScheduleNotice && <ScheduleNotice start={schedule.start} end={schedule.end} dateStr={dateStr} />}
 
+        {justDropped && myDrop && (
+            <!-- «Dado al piso» 🚫: animación especial al volver de la tirada. Tres dados quedan en la mesa
+                 y el cuarto rebota, gira y se cae (con prefers-reduced-motion queda directamente afuera). -->
+            <div id="drop-overlay" role="dialog" aria-modal="true" aria-labelledby="drop-overlay-title" aria-describedby="drop-overlay-text" class="fixed inset-0 h-dvh w-screen z-[100] bg-background/80 backdrop-blur-md flex flex-col items-center justify-center animate-in fade-in duration-300 overflow-hidden">
+                <div class="bg-white/90 border-2 border-lutvia-amarillo/60 p-8 sm:p-12 rounded-3xl shadow-2xl flex flex-col items-center gap-6 max-w-md w-[90%] text-center animate-in zoom-in-95 duration-300">
+                    <p class="text-foreground/60 font-black tracking-widest uppercase text-sm">¡Uy, uy, uy!</p>
+                    <span class="text-6xl leading-none animate-sello-anulado" aria-hidden="true">🚫</span>
+                    <div class="flex items-center justify-center gap-4 sm:gap-6 text-5xl sm:text-6xl py-2" aria-hidden="true">
+                        {dropDice(myDrop).map((v, i) => i === DROPPED_DIE_INDEX ? (
+                            <span class="relative inline-flex items-center justify-center w-[1em] h-[1em]">
+                                <span class="absolute inset-0 rounded-[0.2em] border-[3px] border-dashed border-foreground/25 animate-in fade-in duration-500" style="animation-delay: 1.1s; animation-fill-mode: both;"></span>
+                                <i class={`fa-solid fa-dice-${diceWords[v - 1]} text-foreground/40 animate-dado-se-cae`}></i>
+                            </span>
+                        ) : (
+                            <i class={`fa-solid fa-dice-${diceWords[v - 1]} text-foreground/40 animate-mesa-golpe`} style={`animation-delay: ${i * 60}ms`}></i>
+                        ))}
+                    </div>
+                    <div class="space-y-2">
+                        <h3 id="drop-overlay-title" class="text-2xl font-black text-foreground tracking-tight text-balance">¡Se te cayó un dado al piso!</h3>
+                        <p id="drop-overlay-text" class="text-sm text-foreground/60 font-medium text-pretty">Ese tiro no vale para nada. Juntalo y tirá de nuevo.</p>
+                    </div>
+                    <button type="button" id="drop-overlay-close" class="bg-foreground text-background font-bold px-6 py-3 rounded-pildora hover:opacity-90 transition-opacity cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lutvia-amarillo focus-visible:ring-offset-2">
+                        Juntar el dado y tirar de nuevo
+                    </button>
+                </div>
+            </div>
+        )}
+        {justDropped && (
+            <script is:inline>
+                (() => {
+                    const overlay = document.getElementById("drop-overlay");
+                    if (!overlay) return;
+                    // Al <body>: si queda adentro de un contenedor con transform, `fixed` no cubre toda la ventana
+                    document.body.appendChild(overlay);
+                    const close = () => {
+                        overlay.remove();
+                        // Saca ?caida=1 de la URL para que al recargar no se repita
+                        history.replaceState(null, "", location.pathname);
+                        document.getElementById("roll-button")?.focus();
+                    };
+                    document.getElementById("drop-overlay-close")?.addEventListener("click", close);
+                    overlay.addEventListener("click", (e) => { if (e.target === overlay) close(); });
+                    document.addEventListener("keydown", (e) => { if (e.key === "Escape") close(); }, { once: true });
+                    document.getElementById("drop-overlay-close")?.focus();
+                })();
+            </script>
+        )}
+
         <!-- Fullscreen Dice Rolling Overlay -->
         <div id="roll-overlay" class="fixed inset-0 z-[100] bg-background/80 backdrop-blur-md hidden flex-col items-center justify-center animate-in fade-in duration-300">
             <div class="bg-white/80 border border-white/20 p-8 sm:p-12 rounded-3xl shadow-2xl flex flex-col items-center gap-8 max-w-md w-[90%] text-center animate-in zoom-in-95 duration-300">
-                <p class="text-secondary font-black tracking-widest uppercase text-sm animate-pulse">Invocando al destino</p>
-                
+                <p id="overlay-kicker" class="text-secondary font-black tracking-widest uppercase text-sm animate-pulse">Invocando al destino</p>
+
+                <!-- «Va de culo»: el 🍑 aparece solo si se cantó (lo anima setupRollAnimation) -->
+                <span id="overlay-culo" class="hidden text-6xl leading-none -mb-4" aria-hidden="true">🍑</span>
+
                 <!-- Giant Rolling Dice Container -->
-                <div class="flex items-center justify-center gap-6 text-5xl sm:text-6xl md:text-7xl py-4">
+                <div id="overlay-dice" class="flex items-center justify-center gap-6 text-5xl sm:text-6xl md:text-7xl py-4" style="perspective: 600px;">
                     <i class="fa-solid fa-dice-one text-primary animate-shake-roll" style="animation-delay: 0s;"></i>
                     <i class="fa-solid fa-dice-two text-secondary animate-shake-roll" style="animation-delay: 0.1s;"></i>
                     <i class="fa-solid fa-dice-three text-accent animate-shake-roll" style="animation-delay: 0.2s;"></i>
@@ -587,7 +819,7 @@ const savedPlayers = sortedRolls.filter(r => rollChoreMap.get(r.id)?.code === 'N
                 
                 <div class="space-y-2">
                     <h3 class="text-2xl font-black text-foreground tracking-tight" id="overlay-status-text">Lanzando los dados...</h3>
-                    <p class="text-xs text-foreground/50 font-medium">¿Zafás o lavás? El destino se está decidiendo ahora mismo.</p>
+                    <p id="overlay-subtitle" class="text-xs text-foreground/50 font-medium">¿Zafás o lavás? El destino se está decidiendo ahora mismo.</p>
                 </div>
                 
                 <!-- Glowing loading bar -->

@@ -35,6 +35,10 @@ export const POST: APIRoute = async ({ request, locals }) => {
             sql: "DELETE FROM roll WHERE user_id = ?",
             args: [idToDelete]
         });
+        await db.execute({
+            sql: "DELETE FROM dropped_roll WHERE user_id = ?",
+            args: [idToDelete]
+        });
         
         // Delete user's sessions
         await db.execute({

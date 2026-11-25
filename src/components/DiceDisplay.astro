@@ -1,15 +1,42 @@
 ---
+import DroppedDice from "./DroppedDice.astro";
+import EmojiTip from "./EmojiTip.astro";
+
 export interface Props {
     die1: number;
     die2: number;
     die3: number;
     die4: number;
     isSafe?: boolean;
-    size?: "sm" | "md" | "lg" | "xl";
+    /** `podio`: un poco más grandes que `md` y con poco espacio entre dados */
+    size?: "sm" | "md" | "lg" | "xl" | "podio";
     color?: string;
+    /**
+     * «Va de culo» 🍑: los dados grandes son el tiro definitivo y `raw`, el tiro real, va abajo en chico.
+     * Sin `raw` (por ejemplo, en el podio) se ve solo el definitivo con el 🍑 al lado. El 🍑 va siempre a la derecha.
+     */
+    vaDeCulo?: boolean;
+    raw?: number[];
+    /**
+     * «Se cayó un dado al piso» 🚫: tiro definitivo del tiro que se cayó (ya normalizado).
+     * Los dados grandes son el re-tiro, que es el que vale, y abajo en chico va el caído
+     * (3 dados y el 4.º como hueco). Con `compact` se ve solo el 🚫 al lado.
+     */
+    dropped?: number[];
+    droppedVaDeCulo?: boolean;
+    /** Podio: sin líneas de abajo ni íconos (el 🚫 y el 🍑 van como badges sobre la foto, ver PodiumBadges) */
+    compact?: boolean;
 }
 
-const { die1, die2, die3, die4, isSafe, size = "md", color } = Astro.props;
+const { die1, die2, die3, die4, isSafe, size = "md", color, vaDeCulo = false, raw, dropped, droppedVaDeCulo = false, compact = false } = Astro.props;
+const showRaw = !compact && vaDeCulo && Array.isArray(raw) && raw.length === 4;
+const showPeachOnly = vaDeCulo && !showRaw;
+const hasDropped = Array.isArray(dropped) && dropped.length === 4;
+const showDropped = !compact && hasDropped;
+const showFellOnly = compact && hasDropped;
+const showLines = showRaw || showDropped;
+const finalText = [die1, die2, die3, die4].join(", ");
+const inlineTitle = !compact && showPeachOnly ? "Fue de culo" : undefined;
 
 const diceWords = ['one', 'two', 'three', 'four', 'five', 'six'];
 
@@ -19,15 +46,59 @@ const sizeClasses = {
     sm: "text-sm gap-1",
     md: "text-base md:text-lg gap-1.5 md:gap-2",
     lg: "text-xl md:text-2xl gap-2 md:gap-3",
-    xl: "text-3xl sm:text-4xl md:text-5xl lg:text-6xl gap-3 sm:gap-4 lg:gap-6"
+    xl: "text-3xl sm:text-4xl md:text-5xl lg:text-6xl gap-3 sm:gap-4 lg:gap-6",
+    podio: "text-xl md:text-2xl gap-1"
 };
+
+// Líneas chicas de abajo (tiro real de culo y tiro caído)
+const culoTextClasses = {
+    sm: "text-xs",
+    md: "text-sm",
+    lg: "text-sm",
+    xl: "text-base sm:text-lg",
+    podio: "text-sm"
+};
+
+// Texto del tooltip del 🍑 en la línea del tiro real
+const CULO_TIP = "Cantó «va de culo» antes de tirar: cada dado se lee por la cara de abajo. Cuenta el tiro de arriba; el de abajo es el real.";
 
 const safeClass = color || (isSafe === undefined ? "text-secondary" : (isSafe ? "text-secondary" : "text-primary"));
 ---
 
-<div class={`flex items-center justify-center ${sizeClasses[size]}`}>
+<div class={showLines ? "flex flex-col items-end gap-2" : "contents"}>
+<div class={`flex items-center justify-center ${sizeClasses[size]}`} aria-hidden={showLines ? "true" : undefined} title={inlineTitle}>
     <i class={`${getDieClass(die1)} ${safeClass} drop-shadow-sm animate-in fade-in zoom-in-95 duration-300 hover:scale-110 hover:rotate-6 transition-all duration-300 cursor-default`}></i>
     <i class={`${getDieClass(die2)} text-foreground/30 animate-in fade-in zoom-in-95 duration-300 delay-75 hover:scale-110 hover:-rotate-6 transition-all duration-300 cursor-default`}></i>
     <i class={`${getDieClass(die3)} text-foreground/30 animate-in fade-in zoom-in-95 duration-300 delay-150 hover:scale-110 hover:rotate-6 transition-all duration-300 cursor-default`}></i>
     <i class={`${getDieClass(die4)} text-foreground/30 animate-in fade-in zoom-in-95 duration-300 delay-200 hover:scale-110 hover:-rotate-6 transition-all duration-300 cursor-default`}></i>
+    {showFellOnly && <span class="sr-only">Se le cayó un dado al piso y tuvo que tirar de nuevo</span>}
+    {/* Los emojis van a la derecha de los dados: 🚫 y después el 🍑, que siempre va último */}
+    {showPeachOnly && (<>
+        {!compact && <span aria-hidden="true" class="leading-none">🍑</span>}
+        <span class="sr-only">Fue de culo</span>
+    </>)}
+</div>
+{/* Las líneas de abajo (tiro real y tiro caído) se separan un poco más del tiro que vale */}
+{showRaw && (
+    <p class={`inline-flex items-center gap-1 mt-1 text-foreground/40 whitespace-nowrap ${culoTextClasses[size]}`}>
+        <span class="sr-only">Va de culo. Tiro definitivo: {finalText}. Tiro real: {raw!.join(", ")}.</span>
+        <i class="fa-solid fa-arrow-up text-[0.75em] mr-0.5" aria-hidden="true"></i>
+        {raw!.map(v => <i class={getDieClass(v)} aria-hidden="true"></i>)}
+        <span class="inline-flex items-center ml-0.5">
+            <EmojiTip emoji="🍑" title="Fue de culo" text={CULO_TIP} />
+        </span>
+    </p>
+)}
+{showDropped && (
+    <p class={`inline-flex items-center gap-1 text-foreground/40 whitespace-nowrap ${showRaw ? "" : "mt-1"} ${culoTextClasses[size]}`}>
+        {!showRaw && <span class="sr-only">Tiro que vale: {finalText}.</span>}
+        <i class="fa-solid fa-rotate-left text-[0.75em] mr-0.5" aria-hidden="true"></i>
+        <DroppedDice dice={dropped!} vaDeCulo={droppedVaDeCulo} size="inherit" peach={false} />
+        {/* Los emojis a la derecha y juntitos: primero el 🚫 y el 🍑 siempre último. Cada uno con su tooltip */}
+        <span class="inline-flex items-center ml-0.5">
+            <EmojiTip emoji="🚫" title="Se le cayó un dado al piso" text="Ese tiro (el de abajo, con el hueco) no vale para nada: tuvo que tirar de nuevo y cuenta el de arriba." tone="amarillo" />
+            {droppedVaDeCulo && <EmojiTip class="-ml-1" emoji="🍑" title="Ese tiro era de culo" text="Lo había cantado «va de culo», pero igual se le cayó un dado al piso y no cuenta." />}
+        </span>
+    </p>
+)}
 </div>

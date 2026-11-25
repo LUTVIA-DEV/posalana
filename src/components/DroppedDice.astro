@@ -1,0 +1,39 @@
+---
+// «Se cayó un dado al piso» 🚫: el tiro invalidado se ve con 3 de sus 4 dados.
+// El último quedó como hueco punteado porque rodó abajo de la mesa. Con `animate`,
+// el dado se cae (la regla global de prefers-reduced-motion lo deja directamente afuera).
+import { DROPPED_DIE_INDEX } from "../utils/drop.js";
+
+export interface Props {
+    /** Tiro definitivo del tiro caído (ya normalizado con «va de culo») */
+    dice: number[];
+    vaDeCulo?: boolean;
+    /** `inherit` toma el tamaño de letra de quien lo contiene (por ejemplo, la línea chica de `DiceDisplay`) */
+    size?: "sm" | "md" | "lg" | "inherit";
+    animate?: boolean;
+    /** Mostrar el 🍑 si el tiro caído era de culo (DiceDisplay lo apaga y lo pone después del 🚫) */
+    peach?: boolean;
+}
+
+const { dice, vaDeCulo = false, size = "sm", animate = false, peach = true } = Astro.props;
+const diceWords = ["one", "two", "three", "four", "five", "six"];
+const sizeClasses = {
+    sm: "text-sm gap-1",
+    md: "text-lg gap-1.5",
+    lg: "text-2xl md:text-3xl gap-2",
+    inherit: "gap-1"
+};
+const shownText = dice.filter((_, i) => i !== DROPPED_DIE_INDEX).join(", ");
+---
+
+<span class={`inline-flex items-center ${sizeClasses[size]}`}>
+    <span class="sr-only">Tiro caído: {shownText}, y un dado al piso{vaDeCulo ? ", de culo" : ""}.</span>
+    {dice.map((v, i) => i === DROPPED_DIE_INDEX ? (
+        <span class="relative inline-flex items-center justify-center w-[0.9em] h-[0.9em] rounded-[0.2em] border-2 border-dashed border-foreground/25" aria-hidden="true">
+            {animate && <i class={`fa-solid fa-dice-${diceWords[v - 1]} absolute text-foreground/30 animate-dado-al-piso`}></i>}
+        </span>
+    ) : (
+        <i class={`fa-solid fa-dice-${diceWords[v - 1]} text-foreground/30`} aria-hidden="true"></i>
+    ))}
+    {vaDeCulo && peach && <span class="leading-none" aria-hidden="true">🍑</span>}
+</span>

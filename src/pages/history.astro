@@ -5,6 +5,8 @@ import UserAvatar from '../components/UserAvatar.astro';
 import DiceDisplay from '../components/DiceDisplay.astro';
 import StatsTable from '../components/StatsTable.astro';
 import { formatDate } from '../utils/date.js';
+import { normalizeRoll, type NormalizedRoll } from '../utils/dice.js';
+import { getDropsBetween } from '../utils/drop.js';
 
 if (!Astro.locals.user) {
 	return Astro.redirect('/login');
@@ -12,15 +14,16 @@ if (!Astro.locals.user) {
 
 // Get all rolls ordered by date descending, then by die scores ascending
 const allRollsRes = await db.execute(`
-    SELECT r.*, u.username, u.display_name, u.avatar_url 
+    SELECT r.*, r.rowid AS roll_seq, u.username, u.display_name, u.avatar_url 
     FROM roll r
     JOIN user u ON r.user_id = u.id
-    ORDER BY r.date DESC, r.die1 ASC, r.die2 ASC, r.die3 ASC, r.die4 ASC
+    ORDER BY r.date DESC
 `);
 
 // Group by date
-const groupedRolls: Record<string, typeof allRollsRes.rows> = {};
-for (const row of allRollsRes.rows) {
+// Tiro definitivo (con «va de culo» ya aplicado); el orden del día lo da assignDailyChores
+const groupedRolls: Record<string, NormalizedRoll[]> = {};
+for (const row of allRollsRes.rows.map(normalizeRoll)) {
     const date = row.date as string;
     if (!groupedRolls[date]) {
         groupedRolls[date] = [];
@@ -32,6 +35,9 @@ import { getSeasonId, getPreviousSeasons, formatSeasonName, calculateSeasonPoint
 import { assignDailyChores, chores } from '../utils/chores.js';
 
 const dates = Object.keys(groupedRolls).sort((a, b) => b.localeCompare(a));
+
+// «Se cayó un dado al piso» 🚫: la anécdota de cada día (el tiro caído no cuenta para nada)
+const dropsByDate = await getDropsBetween(db, dates[dates.length - 1] ?? '0000-01-01', dates[0] ?? '9999-12-31');
 
 // Calculate unique seasons present in history dates and load their exemptions
 const uniqueSeasonsInHistory = Array.from(new Set(dates.map(date => getSeasonId(date))));
@@ -52,7 +58,8 @@ const historyData = dates.map(date => {
         choreMap: rollChoreMap,
         lomitoActivated,
         lomitoPlayers,
-        exemptions: seasonExemptions
+        exemptions: seasonExemptions,
+        drops: dropsByDate.get(date) ?? []
     };
 });
 
@@ -361,12 +368,16 @@ const currentSeasonExemptions = await getExemptionsForSeason(db, currentSeasonId
                                             </div>
                                         )}
 
+
                                         {/* Rolls Grid */}
                                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pl-6 md:pl-10 relative z-10">
                                             {data.rolls.map((roll) => {
                                                 const chore = data.choreMap.get(roll.id);
                                                 const isSafe = chore.code === "NA";
                                                 const userExemptions = (data.exemptions || []).filter(e => String(e.user_id) === String(roll.user_id));
+                                                // Tiro caído de este jugador ese día (se ve abajo, como «va de culo»)
+                                                const drop = data.drops.find(d => String(d.user_id) === String(roll.user_id));
+                                                const dropProps = drop ? { dropped: [drop.die1, drop.die2, drop.die3, drop.die4], droppedVaDeCulo: drop.va_de_culo } : {};
                                                 return (
                                                     <div class={`group flex flex-row items-center justify-between p-4 rounded-chico border transition-all duration-300 hover:shadow-md hover:-translate-y-0.5 ${isSafe ? 'bg-white border-foreground/10 hover:border-secondary/30' : 'bg-white border-primary/20 hover:border-primary/40'}`}>
                                                         
@@ -387,8 +398,20 @@ const currentSeasonExemptions = await getExemptionsForSeason(db, currentSeasonId
 
                                                         {/* Stats */}
                                                         <div class="flex items-center gap-4">
+                                                            {drop && (
+                                                                <span class="sm:hidden text-xs font-bold text-foreground/60 whitespace-nowrap" title="Se le cayó un dado al piso y tuvo que tirar de nuevo">
+                                                                    <span aria-hidden="true">🚫</span>
+                                                                    <span class="sr-only">Se le cayó un dado al piso y tuvo que tirar de nuevo.</span>
+                                                                </span>
+                                                            )}
+                                                            {roll.va_de_culo && (
+                                                                <span class="sm:hidden text-xs font-bold tabular-nums text-foreground/60 whitespace-nowrap" title="Fue de culo">
+                                                                    <span aria-hidden="true">🍑</span>
+                                                                    <span class="sr-only">Fue de culo: tiro real {roll.raw_dice.join(", ")}, definitivo {[roll.die1, roll.die2, roll.die3, roll.die4].join(", ")}.</span>
+                                                                </span>
+                                                            )}
                                                             <div class="hidden sm:flex items-center opacity-70 group-hover:opacity-100 transition-opacity">
-                                                                <DiceDisplay die1={roll.die1 as number} die2={roll.die2 as number} die3={roll.die3 as number} die4={roll.die4 as number} size="sm" isSafe={isSafe} />
+                                                                <DiceDisplay die1={roll.die1 as number} die2={roll.die2 as number} die3={roll.die3 as number} die4={roll.die4 as number} raw={roll.raw_dice} vaDeCulo={roll.va_de_culo} {...dropProps} size="sm" isSafe={isSafe} />
                                                             </div>
                                                             <div class={`px-3 py-1 rounded-chico text-xs font-black tracking-widest ${isSafe ? 'bg-secondary text-background' : 'bg-primary text-background shadow-[0_0_10px_rgba(234,42,88,0.3)]'}`}>
                                                                 {chore.code}

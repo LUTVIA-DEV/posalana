@@ -1,6 +1,8 @@
 import type { Client } from "@libsql/client";
 import { assignDailyChores } from "./chores.js";
+import { formatDiceText, normalizeRoll } from "./dice.js";
 import { sendDiscordVerdict } from "./discord.js";
+import { formatDroppedText, getDropsForDate } from "./drop.js";
 import { getSeasonId, getExemptionsForSeason } from "./season.js";
 
 /**
@@ -18,14 +20,14 @@ export async function publishDailyVerdict(
 
     const allRollsRes = await db.execute({
         sql: `
-            SELECT r.*, u.username, u.display_name, u.avatar_url
+            SELECT r.*, r.rowid AS roll_seq, u.username, u.display_name, u.avatar_url
             FROM roll r
             JOIN user u ON r.user_id = u.id
             WHERE r.date = ?
         `,
         args: [dateStr]
     });
-    const allRolls = allRollsRes.rows;
+    const allRolls = allRollsRes.rows.map(normalizeRoll); // tiro definitivo («va de culo»)
 
     if (allRolls.length === 0) {
         return { sent: false, playersCount: 0 };
@@ -41,8 +43,19 @@ export async function publishDailyVerdict(
         exentos: [] as string[]
     };
 
+    // «Dado al piso» 🚫: caídas del día, para anotarlas al lado de cada nombre
+    const drops = await getDropsForDate(db, dateStr);
+
     for (const roll of sortedRolls) {
-        const displayName = String(roll.display_name || roll.username);
+        const name = String(roll.display_name || roll.username);
+        // Quien cantó «va de culo» lleva su tiro real y el definitivo; a quien se le cayeron
+        // los dados, el tiro caído. Por ejemplo: «Ana (6·4·3·1 — real: 1·3·4·6 🍑 — caído: 2·5·3·⬚ 🚫)»
+        const drop = drops.find(d => String(d.user_id) === String(roll.user_id));
+        const notes: string[] = [];
+        if (roll.va_de_culo) notes.push(formatDiceText(roll.raw_dice, true, "·"));
+        else if (drop) notes.push([roll.die1, roll.die2, roll.die3, roll.die4].join("·"));
+        if (drop) notes.push(`caído: ${formatDroppedText([drop.die1, drop.die2, drop.die3, drop.die4], drop.va_de_culo, "·")}`);
+        const displayName = notes.length > 0 ? `${name} (${notes.join(" — ")})` : name;
         const chore = rollChoreMap.get(roll.id);
 
         if (chore.code === "LA") {
@@ -68,7 +81,12 @@ export async function publishDailyVerdict(
 
     const playersCount = new Set(allRolls.map(r => String(r.user_id))).size;
 
-    const result = await sendDiscordVerdict(formattedDate, choresAssigned, playersCount, options.automatic ?? false);
+    // A quienes se les cayó un dado al piso y no volvieron a tirar (los demás ya figuran con su tarea)
+    const droppedBy = drops
+        .filter(d => !allRolls.some(r => String(r.user_id) === String(d.user_id)))
+        .map(d => String(d.display_name || d.username));
+
+    const result = await sendDiscordVerdict(formattedDate, choresAssigned, playersCount, options.automatic ?? false, droppedBy);
     if (result === "error") {
         throw new Error("Discord rechazó el veredicto");
     }

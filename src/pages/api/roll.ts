@@ -1,7 +1,9 @@
 import type { APIContext } from "astro";
 import db from "../../db/index.js";
-import { assignDailyChores } from "../../utils/chores.js";
-import { sendDiscordRoll } from "../../utils/discord.js";
+import { finalDice, normalizeRoll, type Dice } from "../../utils/dice.js";
+import { sendDiscordDrop, sendDiscordRoll } from "../../utils/discord.js";
+import { devUnlimitedRolls } from "../../utils/dev.js";
+import { canDrop, claimDrop, getDropProbability, getDropsForDate, hasUserDropToday } from "../../utils/drop.js";
 import { getArgentinaNow, getNextPlayDay, getRollSchedule, getRollWindowStatus } from "../../utils/schedule.js";
 
 function rollDie() {
@@ -20,7 +22,10 @@ export async function POST(context: APIContext): Promise<Response> {
 
     // Solo se puede tirar los días de juego y dentro del horario oficial (el tester
     // queda afuera de esta regla para poder probar la Cláusula Lomito cuando quiera).
-    if (context.locals.user?.role !== 'tester') {
+    // En local, con DEV_UNLIMITED_ROLLS=1, no hay fecha, horario ni tirada única.
+    const unlimited = devUnlimitedRolls();
+
+    if (context.locals.user?.role !== 'tester' && !unlimited) {
         const schedule = await getRollSchedule(db);
         const status = getRollWindowStatus(schedule, minutes, dateStr);
         if (status === "no-play") {
@@ -42,8 +47,26 @@ export async function POST(context: APIContext): Promise<Response> {
         args: [userId, dateStr]
     });
 
+    // En modo desarrollo se puede volver a tirar: ese re-tiro no es la primera tirada del día
+    const hadRollToday = existing.rows.length > 0;
     if (existing.rows.length > 0) {
-        return new Response("Ya tiraste los dados hoy", { status: 400 });
+        if (!unlimited) {
+            return new Response("Ya tiraste los dados hoy", { status: 400 });
+        }
+        // Modo desarrollo: la tirada nueva reemplaza la de hoy
+        await db.execute({ sql: "DELETE FROM roll WHERE user_id = ? AND date = ?", args: [userId, dateStr] });
+    }
+
+    // «Va de culo» 🍑: se canta antes de tirar (viene en el pedido) y el servidor da vuelta los dados.
+    let vaDeCulo = false;
+    // Solo en local (DEV_UNLIMITED_ROLLS=1): forzar que este tiro se caiga al piso
+    let forceDrop = false;
+    try {
+        const form = await context.request.formData();
+        vaDeCulo = form.get("va_de_culo") === "1";
+        forceDrop = unlimited && form.get("forzar_caida") === "1";
+    } catch {
+        // Pedido sin formulario: tirada normal
     }
 
     let d1 = rollDie();
@@ -56,7 +79,7 @@ export async function POST(context: APIContext): Promise<Response> {
         // Fetch admin's roll for today
         const adminRollRes = await db.execute({
             sql: `
-                SELECT r.die1, r.die2, r.die3, r.die4 
+                SELECT r.die1, r.die2, r.die3, r.die4, r.va_de_culo
                 FROM roll r 
                 JOIN user u ON r.user_id = u.id 
                 WHERE u.role = 'admin' AND r.date = ? 
@@ -65,39 +88,65 @@ export async function POST(context: APIContext): Promise<Response> {
             args: [dateStr]
         });
         if (adminRollRes.rows.length > 0) {
-            d1 = adminRollRes.rows[0].die1 as number;
-            d2 = adminRollRes.rows[0].die2 as number;
-            d3 = adminRollRes.rows[0].die3 as number;
-            d4 = adminRollRes.rows[0].die4 as number;
+            // Copia el tiro definitivo del admin; si el tester canta «va de culo», guarda el real que da lo mismo
+            const admin = normalizeRoll(adminRollRes.rows[0]);
+            [d1, d2, d3, d4] = finalDice([admin.die1, admin.die2, admin.die3, admin.die4], vaDeCulo);
         } else {
             return new Response("El admin debe tirar primero para poder testear la cláusula lomito.", { status: 400 });
         }
     }
 
+    const displayName = context.locals.user?.display_name || context.locals.user?.username || "Usuario";
+
+    // «Se cayó un dado al piso» 🚫: un tiro por día se invalida al azar y hay que tirar de nuevo
+    if (context.locals.user && canDrop(context.locals.user)) {
+        let drops = false;
+        if (forceDrop) {
+            await db.execute({ sql: "DELETE FROM dropped_roll WHERE user_id = ? AND date = ?", args: [userId, dateStr] });
+            drops = true;
+        } else if (!hadRollToday && !(await hasUserDropToday(db, userId, dateStr))) {
+            // Chance fija en la primera tirada del día, igual para todos: puro azar, sin tope por día
+            drops = Math.random() < (await getDropProbability(db, dateStr));
+        }
+        if (drops) {
+            const raw: Dice = [d1, d2, d3, d4];
+            if (await claimDrop(db, { userId, dateStr, timeStr, raw, vaDeCulo })) {
+                sendDiscordDrop(displayName, raw, vaDeCulo).catch(err => {
+                    console.error("Error sending Discord drop:", err);
+                });
+                return context.redirect("/?caida=1");
+            }
+        }
+    }
+
     await db.execute({
-        sql: "INSERT INTO roll (id, user_id, date, time, die1, die2, die3, die4) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-        args: [id, userId, dateStr, timeStr, d1, d2, d3, d4]
+        sql: "INSERT INTO roll (id, user_id, date, time, die1, die2, die3, die4, va_de_culo) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        args: [id, userId, dateStr, timeStr, d1, d2, d3, d4, vaDeCulo ? 1 : 0]
     });
+
+    // Dados reales (los que se guardaron) y tiro definitivo, que es el que cuenta
+    const rawDice: Dice = [d1, d2, d3, d4];
+    const [f1, f2, f3, f4] = finalDice(rawDice, vaDeCulo);
 
     // Fetch all rolls of today to check if this roll triggered the Cláusula Lomito
     const allRollsRes = await db.execute({
         sql: `
-            SELECT r.id, r.user_id, r.die1, r.die2, r.die3, r.die4, u.display_name, u.username, u.avatar_url 
+            SELECT r.id, r.user_id, r.die1, r.die2, r.die3, r.die4, r.va_de_culo, u.display_name, u.username, u.avatar_url 
             FROM roll r 
             JOIN user u ON r.user_id = u.id 
             WHERE r.date = ?
         `,
         args: [dateStr]
     });
-    const allRolls = allRollsRes.rows;
+    const allRolls = allRollsRes.rows.map(normalizeRoll);
 
     // Check if the current roll specifically triggered the Lomito Clause (i.e. matches another roll from today in the exact same order)
     const currentRollMatchesOther = allRolls.some((r: any) => 
         String(r.user_id) !== String(userId) &&
-        Number(r.die1) === d1 &&
-        Number(r.die2) === d2 &&
-        Number(r.die3) === d3 &&
-        Number(r.die4) === d4
+        r.die1 === f1 &&
+        r.die2 === f2 &&
+        r.die3 === f3 &&
+        r.die4 === f4
     );
 
     let discordLomitoActivated = false;
@@ -105,10 +154,10 @@ export async function POST(context: APIContext): Promise<Response> {
     if (currentRollMatchesOther) {
         discordLomitoActivated = true;
         const matchingRolls = allRolls.filter((r: any) => 
-            Number(r.die1) === d1 &&
-            Number(r.die2) === d2 &&
-            Number(r.die3) === d3 &&
-            Number(r.die4) === d4
+            r.die1 === f1 &&
+            r.die2 === f2 &&
+            r.die3 === f3 &&
+            r.die4 === f4
         );
         for (const r of matchingRolls) {
             const name = r.display_name || r.username || "Usuario";
@@ -119,8 +168,10 @@ export async function POST(context: APIContext): Promise<Response> {
     }
 
     // Send Discord notification asynchronously (don't block the redirect)
-    const displayName = context.locals.user?.display_name || context.locals.user?.username || "Usuario";
-    sendDiscordRoll(displayName, [d1, d2, d3, d4], discordLomitoActivated, discordLomitoPlayers).catch(err => {
+    // Si es el re-tiro después de que se le cayó un dado al piso, el mensaje muestra también el caído
+    const myDrop = (await getDropsForDate(db, dateStr)).find(d => String(d.user_id) === String(userId));
+    const droppedForDiscord = myDrop ? { dice: [myDrop.die1, myDrop.die2, myDrop.die3, myDrop.die4], vaDeCulo: myDrop.va_de_culo } : null;
+    sendDiscordRoll(displayName, rawDice, vaDeCulo, discordLomitoActivated, discordLomitoPlayers, droppedForDiscord).catch(err => {
         console.error("Error trigger sending Discord roll:", err);
     });
 

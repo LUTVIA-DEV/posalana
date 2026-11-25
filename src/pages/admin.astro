@@ -6,6 +6,8 @@ import DiceDisplay from "../components/DiceDisplay.astro";
 import { getSeasonId, getPreviousSeasons, formatSeasonName } from "../utils/season.js";
 import { getArgentinaNow, getRollSchedule, getRollWindowStatus } from "../utils/schedule.js";
 import { formatDate } from "../utils/date.js";
+import { normalizeRoll } from "../utils/dice.js";
+import { DROP_PROBABILITY_KEY, P_MAX, P_MIN, defaultDropProbability, getDropsBetween } from "../utils/drop.js";
 
 const { user } = Astro.locals;
 
@@ -28,13 +30,20 @@ const allExemptions = exemptionsRes.rows;
 
 // Fetch all rolls
 const rollsRes = await db.execute(`
-	SELECT r.id, r.date, r.die1, r.die2, r.die3, r.die4, u.username, u.display_name, u.avatar_url 
+	SELECT r.id, r.user_id, r.date, r.die1, r.die2, r.die3, r.die4, r.va_de_culo, u.username, u.display_name, u.avatar_url 
 	FROM roll r 
 	JOIN user u ON r.user_id = u.id 
 	ORDER BY r.date DESC, r.id DESC
 	LIMIT 50
 `);
-const recentRolls = rollsRes.rows;
+const recentRolls = rollsRes.rows.map(normalizeRoll);
+// «Dado al piso» 🚫: tiros caídos de esos días, para mostrarlos abajo de cada re-tiro
+const recentDates = recentRolls.map(r => String(r.date)).sort();
+const recentDrops = recentDates.length > 0 ? await getDropsBetween(db, recentDates[0], recentDates[recentDates.length - 1]) : new Map();
+const adminDropProps = (r: { date: unknown; user_id: unknown }) => {
+    const d = (recentDrops.get(String(r.date)) ?? []).find((x: any) => String(x.user_id) === String(r.user_id));
+    return d ? { dropped: [d.die1, d.die2, d.die3, d.die4], droppedVaDeCulo: d.va_de_culo } : {};
+};
 
 // Fetch recent password resets
 const resetsRes = await db.execute(`
@@ -61,6 +70,10 @@ settingsRes.rows.forEach((s: any) => settingsMap.set(s.key, s.value));
 const now = getArgentinaNow();
 const dateStr = now.dateStr;
 const currentSeason = getSeasonId(dateStr);
+
+// «Dado al piso» 🚫: chance por tirada (la fijada por el admin, o la automática por asistencia)
+const dropDefaultPct = Math.round((await defaultDropProbability(db, dateStr)) * 1000) / 10;
+const dropCustomPct = settingsMap.has(DROP_PROBABILITY_KEY) ? String(settingsMap.get(DROP_PROBABILITY_KEY)) : '';
 
 // Horario de tirada y estado del veredicto automático de hoy
 const schedule = await getRollSchedule(db);
@@ -148,6 +161,11 @@ uniqueSeasons.sort((a, b) => {
                             <label class="block text-sm font-bold mb-1 text-foreground/80">Tirada especial</label>
                             <input type="date" name="special_roll_date" value={schedule.specialDate || ''} class="w-full bg-foreground/5 border border-foreground/10 rounded-chico p-3 text-foreground" />
                             <p class="text-xs text-foreground/50 mt-1">Se juega martes, miércoles y jueves. Elegí una fecha para habilitar la tirada un lunes, viernes o fin de semana, con el horario de arriba. Dejala vacía para no habilitar ninguna.{schedule.specialDate === dateStr && <strong class="text-foreground/70"> Hoy hay tirada especial.</strong>}</p>
+                        </div>
+                        <div>
+                            <label for="drop_probability" class="block text-sm font-bold mb-1 text-foreground/80"><span aria-hidden="true">🚫</span> Chance de dado al piso (% por tirada)</label>
+                            <input type="number" id="drop_probability" name="drop_probability" min={P_MIN * 100} max={P_MAX * 100} step="0.1" inputmode="decimal" value={dropCustomPct} placeholder={`Automática: ${dropDefaultPct}`} class="w-full bg-foreground/5 border border-foreground/10 rounded-chico p-3 text-foreground tabular-nums" />
+                            <p class="text-xs text-foreground/50 mt-1">Chance de que se caiga un dado al piso en la primera tirada del día de cada jugador, la misma para todos. Dejala vacía para usar la automática (<span class="tabular-nums">{dropDefaultPct} %</span> hoy: la que da ~90 % de chance de al menos una caída hasta en un día flojo de asistencia). Entre <span class="tabular-nums">{P_MIN * 100}</span> y <span class="tabular-nums">{P_MAX * 100}</span> %.</p>
                         </div>
                         <div>
                             <label class="flex items-center gap-3 cursor-pointer">
@@ -430,7 +448,7 @@ uniqueSeasons.sort((a, b) => {
                                         </div>
                                     </td>
                                     <td class="p-4">
-                                        <DiceDisplay die1={r.die1 as number} die2={r.die2 as number} die3={r.die3 as number} die4={r.die4 as number} size="md" />
+                                        <DiceDisplay die1={r.die1 as number} die2={r.die2 as number} die3={r.die3 as number} die4={r.die4 as number} raw={r.raw_dice} vaDeCulo={r.va_de_culo} {...adminDropProps(r)} size="md" />
                                     </td>
                                     <td class="p-4 text-right">
                                         <form method="post" action="/api/admin/delete-roll" onsubmit={`return confirm('⚠️ ¿Alterar el destino y anular la tirada de ${r.username}?')`}>

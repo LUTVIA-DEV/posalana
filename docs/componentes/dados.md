@@ -11,9 +11,13 @@ Los cuatro dados de una tirada, en fila. El primero es **el que decide** la tare
 | `die1` … `die4` | Valores de 1 a 6 (`fa-dice-one` … `fa-dice-six` de Font Awesome) |
 | `size` | `sm`, `md`, `lg` o `xl` (de `text-sm` a `text-6xl`) |
 | `isSafe` | Color del dado que decide: `secondary` (cyan) si te salvás, `primary` (rosa) si te toca tarea |
+| `vaDeCulo`, `raw` | «Va de culo» 🍑: los dados grandes son el definitivo y abajo se agrega una línea chica, alineada a la derecha, con una flecha hacia arriba, el tiro real en dados y el 🍑 a la derecha (gris al 40 %, nunca en números). Lleva texto para lectores de pantalla con los dos tiros. Con `vaDeCulo` sin `raw` (el podio) se ve solo el definitivo con 🍑 al lado |
+| `dropped`, `droppedVaDeCulo` | «Se cayó un dado al piso» 🚫: el tiro definitivo del tiro que se cayó. Igual que «va de culo», los dados grandes son el que vale (el re-tiro) y abajo va una línea chica, alineada a la derecha, con ↺, el tiro caído (`DroppedDice`: 3 dados y el 4.º como hueco punteado) y a la derecha el 🚫, más el 🍑 al final si ese tiro era de culo (el 🍑 siempre va último). El 🚫 y el 🍑 de las líneas de abajo tienen tooltip (`EmojiTip`): se abre con el mouse sobre el emoji, el foco o un toque. Si además el re-tiro fue de culo, van las dos líneas: primero la del 🍑 y después la del 🚫 |
+| `size="podio"` | Tamaño del podio: un poco más grande que `md` y con poco espacio entre dados |
+| `compact` | Podio: solo el tiro que vale, sin líneas de abajo ni íconos (con texto para lectores de pantalla). El 🚫 y el 🍑 van como badges sobre la foto de perfil (`PodiumBadges`) |
 | `color` | Pisa el color del dado que decide (la portada pasa el de la tarea: PO rosa, SA cyan, LA violeta, NA gris al 30 %) |
 
-Sin `isSafe` ni `color`, el dado que decide va en cyan.
+Sin `isSafe` ni `color`, el dado que decide va en cyan. Los valores `die1`…`die4` son siempre el tiro **definitivo**: pasale la fila normalizada con `normalizeRoll` (`src/utils/dice.ts`) y `raw={roll.raw_dice} vaDeCulo={roll.va_de_culo}`.
 
 ## Movimiento
 

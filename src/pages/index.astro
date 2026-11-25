@@ -655,7 +655,18 @@ const savedPlayers = sortedRolls.filter(r => rollChoreMap.get(r.id)?.code === 'N
                     setTimeout(submit, reduce ? 1800 : 2700);
                 }
 
+                // «Va de culo» 🍑: con el switch prendido, el logo de la navbar queda dado vuelta
+                function setupLogoDeCulo() {
+                    const culoSwitch = document.getElementById('va-de-culo');
+                    const logo = document.querySelector('.logo-container');
+                    if (!logo) return;
+                    const sync = () => logo.classList.toggle('logo-de-culo', !!culoSwitch?.checked);
+                    culoSwitch?.addEventListener('change', sync);
+                    sync();
+                }
+
                 function setupRollAnimation() {
+                    setupLogoDeCulo();
                     const rollForm = document.getElementById('roll-form');
                     const rollButton = document.getElementById('roll-button');
                     const rollOverlay = document.getElementById('roll-overlay');
